@@ -1,0 +1,18 @@
+<main class="max-w-5xl mx-auto p-4 md:p-6 animate-fadeIn">
+    <header class="mb-8 flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800 italic uppercase">Mapa de Ubicaciones</h2>
+            <p class="text-slate-500 font-bold">Distribuidora Vital Can - Gestión de Racks</p>
+        </div>
+        <button onclick="abrirModalPosicion()" class="bg-slate-800 text-white px-4 py-2 rounded-xl shadow-lg font-bold hover:bg-slate-700 transition-all flex items-center gap-2 text-sm uppercase italic">
+            <i class="fas fa-plus-circle text-indigo-400"></i> Nuevo Rack
+        </button>
+    </header>
+
+    <div id="mapa-posiciones" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="col-span-full text-center py-10 text-slate-400">
+            <i class="fas fa-circle-notch animate-spin text-2xl mb-2"></i>
+            <p>Cargando posiciones desde Supabase...</p>
+        </div>
+    </div>
+</main>

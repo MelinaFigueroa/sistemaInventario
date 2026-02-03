@@ -1,0 +1,44 @@
+<main class="max-w-5xl mx-auto p-4 md:p-6 animate-fadeIn">
+    <header class="mb-8 flex justify-between items-center text-nowrap">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800 italic uppercase">Maestro de Productos</h2>
+            <p class="text-slate-500 font-bold">Distribuidora de Alimentos - Control de Catálogo</p>
+        </div>
+        <button class="bg-indigo-600 text-white px-6 py-3 rounded-xl shadow-lg font-bold hover:bg-indigo-700 transition-all flex items-center gap-2">
+            <i class="fas fa-plus"></i> <span class="hidden md:inline italic uppercase">Nuevo Producto</span>
+        </button>
+    </header>
+
+    <div class="relative mb-8">
+        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input type="text" id="busqueda-producto" placeholder="Buscar por nombre, SKU o categoría..." 
+            class="w-full pl-12 pr-4 py-4 rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none text-lg transition-all font-bold italic">
+    </div>
+
+    <div id="lista-productos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="col-span-full text-center py-20 text-slate-400">
+            <i class="fas fa-dog animate-bounce text-3xl mb-4"></i>
+            <p class="font-bold italic">Cargando catálogo de mascotas...</p>
+        </div>
+    </div>
+</main>
+<script>
+    // Escucha lo que escribís en el buscador y filtra en tiempo real
+document.addEventListener('input', (e) => {
+    if (e.target.id === 'busqueda-producto') {
+        const term = e.target.value.toLowerCase();
+        const cards = document.querySelectorAll('#lista-productos > div');
+        
+        cards.forEach(card => {
+            const nombre = card.querySelector('h3').innerText.toLowerCase();
+            const sku = card.querySelector('p').innerText.toLowerCase();
+            
+            if (nombre.includes(term) || sku.includes(term)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
