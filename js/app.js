@@ -218,12 +218,12 @@ async function renderMovimientos() {
 // ==========================================
 // 4. LÓGICA DE NEGOCIO (PICKING Y FACTURACIÓN)
 // ==========================================
+
 async function procesarPicking(pedidoId) {
-    // Cambiamos el confirm por algo más limpio si querés, pero por ahora lo dejamos
     if(!confirm("¿Deseas procesar el Picking y facturar en AFIP?")) return;
 
     try {
-        // 1. Obtener detalles del pedido
+        // 1. Obtener detalles
         const { data: pedidoInfo, error: errP } = await _supabase
             .from('pedidos')
             .select(`cliente_nombre, pedido_detalle(cantidad, producto_id, productos(nombre, precios(precio_venta)))`)
@@ -235,34 +235,48 @@ async function procesarPicking(pedidoId) {
         const detalles = pedidoInfo.pedido_detalle;
         let totalPedido = 0;
         
+        // Calculamos el total con un fallback por si no hay precio
         detalles.forEach(d => {
              const precio = d.productos?.precios?.[0]?.precio_venta || 0;
              totalPedido += (d.cantidad * precio);
         });
 
-        if (totalPedido <= 0) totalPedido = 100; // Fallback de seguridad
+        // VALIDACIÓN ANTES DE LLAMAR A AFIP
+        if (totalPedido <= 0) {
+            totalPedido = 100; // Un valor genérico para probar si el pedido vino sin precios
+        }
 
-        // 2. Invocar Edge Function (AFIP)
+        // 2. Invocar Edge Function
         const { data: afipData, error: afipError } = await _supabase.functions.invoke('afip-invoice', {
             body: { 
                 pedidoId: pedidoId,
-                total: totalPedido,
+                total: totalPedido, // Ya es número
                 cliente: pedidoInfo.cliente_nombre || 'Consumidor Final'
             },
             headers: {
-                "apikey": _supabase.supabaseKey, 
-                "Authorization": `Bearer ${_supabase.supabaseKey}` 
-            }
+                "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9teWxydWNrcXZlc2VtcmxvbWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNDE0MjIsImV4cCI6MjA4NTcxNzQyMn0.uWe09wGzCnYtIXPXTfhE7Z59iNda2YHjcqFBtKmcopU", 
+                "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9teWxydWNrcXZlc2VtcmxvbWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNDE0MjIsImV4cCI6MjA4NTcxNzQyMn0.uWe09wGzCnYtIXPXTfhE7Z59iNda2YHjcqFBtKmcopU" 
+    }
         });
 
-        // ERROR AQUÍ: Tu función devuelve .success o .ok? Vamos a validar ambos.
-        if (afipError || !afipData || (!afipData.success && !afipData.ok)) {
+        // Si hay error en la función, lo mostramos pero no frenamos el mundo
+        if (afipError || !afipData || !afipData.success) {
+            console.error("Detalle error AFIP:", afipError);
             throw new Error(afipData?.error || "La función de AFIP no respondió correctamente");
         }
-
-        // 3. DESCUENTO DE STOCK (Si AFIP aprobó)
+// Dentro de procesarPicking, luego de recibir afipData
+if (afipData.ok) {
+    // Aquí es donde antes tenías el alert
+    await mostrarModalExito(afipData.cae, afipData.vto); 
+    
+    // ESTA ES LA CLAVE: Volver a ejecutar tu función que llena la tabla de ventas
+    if (typeof cargarVentas === 'function') {
+        cargarVentas(); 
+    }
+}
+        // 3. Si AFIP aprobó, procedemos a descontar stock
         for (const item of detalles) {
-            const { data: pos } = await _supabase
+             const { data: pos } = await _supabase
                 .from('posiciones')
                 .select('id, cantidad')
                 .eq('producto_id', item.producto_id)
@@ -281,46 +295,37 @@ async function procesarPicking(pedidoId) {
                     producto_id: item.producto_id,
                     tipo: 'SALIDA',
                     origen: pos.id,
-                    destino: 'Venta (CAE ' + (afipData.cae || 'SIM') + ')',
+                    destino: 'Venta (CAE ' + afipData.cae + ')',
                     cantidad: item.cantidad,
                     usuario: USUARIO_ACTUAL
                 }]);
             }
         }
 
-        // 4. GUARDAR FACTURA
+        // 4. Guardar Factura con cae
         await _supabase.from('facturas').insert([{
             pedido_id: pedidoId,
-            cliente_nombre: pedidoInfo.cliente_nombre,
+            cliente_nombre: detalles[0]?.cliente_nombre || 'Cliente Vital Can',
             total_neto: totalPedido,
             iva: totalPedido * 0.21,
             total_final: totalPedido * 1.21,
             usuario: USUARIO_ACTUAL,
             cae: afipData.cae,
-            cae_vto: afipData.caeFchVto || afipData.vto,
+            cae_vto: afipData.caeFchVto,
             nro_comprobante: afipData.nroComprobante
         }]);
 
-        // 5. ACTUALIZAR ESTADO DEL PEDIDO
+        // 5. Actualizar Pedido
         await _supabase.from('pedidos').update({ estado: 'preparado' }).eq('id', pedidoId);
 
-        // 6. MOSTRAR ÉXITO Y REFRESCAR
-        // Si tenés el modal que armamos antes:
-        if (typeof mostrarModalExito === 'function') {
-            mostrarModalExito(afipData.cae, afipData.caeFchVto || afipData.vto);
-        } else {
-            alert("¡Factura Autorizada!");
-        }
-
-        // Refrescar las listas
+        alert(`¡Factura Autorizada por AFIP!\nCAE: ${afipData.cae}\nVto: ${afipData.caeFchVto}`);
         renderPedidos();
-        if (typeof renderFacturacion === 'function') renderFacturacion();
-
     } catch (e) {
-        console.error("Error fatal:", e);
+        console.error(e);
         alert("Error en el proceso: " + e.message);
     }
 }
+
 // ==========================================
 // 5. MODALES Y UI HELPERS
 // ==========================================
@@ -469,7 +474,7 @@ async function imprimirFactura(facturaId) {
             `;
         }).join('');
 
-        const contenido = `
+               const contenido = `
             <html>
             <head>
                 <title>Factura #${factura.id.substring(0,8)}</title>
@@ -563,35 +568,6 @@ window.addEventListener('DOMContentLoaded', mostrarUsuario);
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { cerrarModalPedido(); closeDrawer(); }
 });
-
-function mostrarModalExito(cae, vto) {
-    // Creamos el modal dinámicamente si no existe
-    let modal = document.getElementById('modal-exito-afip');
-    if(!modal) {
-        const div = document.createElement('div');
-        div.id = 'modal-exito-afip';
-        div.className = 'fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4';
-        div.innerHTML = `
-            <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center border border-slate-100">
-                <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-                    <i class="fas fa-check-double"></i>
-                </div>
-                <h3 class="text-2xl font-black text-slate-800 mb-2 italic uppercase tracking-tighter">¡Listo!</h3>
-                <p class="text-slate-500 mb-6 font-bold text-sm">El stock se descontó y AFIP autorizó la factura.</p>
-                <div class="bg-slate-50 rounded-2xl p-4 mb-6 text-left border border-slate-100 font-mono text-xs">
-                    <p class="text-slate-400 uppercase font-black mb-1">CAE:</p>
-                    <p id="txt-modal-cae" class="text-slate-700 font-bold mb-2"></p>
-                    <p class="text-slate-400 uppercase font-black mb-1">Vencimiento:</p>
-                    <p id="txt-modal-vto" class="text-slate-700 font-bold"></p>
-                </div>
-                <button onclick="document.getElementById('modal-exito-afip').remove()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition-all uppercase italic">Entendido</button>
-            </div>`;
-        document.body.appendChild(div);
-        modal = div;
-    }
-    document.getElementById('txt-modal-cae').innerText = cae;
-    document.getElementById('txt-modal-vto').innerText = vto;
-}
 
 // ==========================================
 // 6. INICIO
