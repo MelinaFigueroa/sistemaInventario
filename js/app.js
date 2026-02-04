@@ -264,7 +264,16 @@ async function procesarPicking(pedidoId) {
             console.error("Detalle error AFIP:", afipError);
             throw new Error(afipData?.error || "La función de AFIP no respondió correctamente");
         }
-
+// Dentro de procesarPicking, luego de recibir afipData
+if (afipData.ok) {
+    // Aquí es donde antes tenías el alert
+    await mostrarModalExito(afipData.cae, afipData.vto); 
+    
+    // ESTA ES LA CLAVE: Volver a ejecutar tu función que llena la tabla de ventas
+    if (typeof cargarVentas === 'function') {
+        cargarVentas(); 
+    }
+}
         // 3. Si AFIP aprobó, procedemos a descontar stock
         for (const item of detalles) {
              const { data: pos } = await _supabase
