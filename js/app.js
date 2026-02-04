@@ -250,8 +250,8 @@ async function procesarPicking(pedidoId) {
                 cliente: pedidoInfo.cliente_nombre || 'Consumidor Final'
             },
             headers: {
-                "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9teWxydWNrcXZlc2VtcmxvbWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNDE0MjIsImV4cCI6MjA4NTcxNzQyMn0.uWe09wGzCnYtIXPXTfhE7Z59iNda2YHjcqFBtKmcopUyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9teWxydWNrcXZlc2VtcmxvbWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNDE0MjIsImV4cCI6MjA4NTcxNzQyMn0.uWe09wGzCnYtIXPXTfhE7Z59iNda2YHjcqFBtKmcopU", 
-                "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9teWxydWNrcXZlc2VtcmxvbWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNDE0MjIsImV4cCI6MjA4NTcxNzQyMn0.uWe09wGzCnYtIXPXTfhE7Z59iNda2YHjcqFBtKmcopUyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9teWxydWNrcXZlc2VtcmxvbWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNDE0MjIsImV4cCI6MjA4NTcxNzQyMn0.uWe09wGzCnYtIXPXTfhE7Z59iNda2YHjcqFBtKmcopU" 
+                "apikey": _supabase.supabaseKey, 
+                "Authorization": `Bearer ${_supabase.supabaseKey}` 
             }
         });
 
@@ -321,113 +321,6 @@ async function procesarPicking(pedidoId) {
         alert("Error en el proceso: " + e.message);
     }
 }
-// async function procesarPicking(pedidoId) {
-//     if(!confirm("¿Deseas procesar el Picking y facturar en AFIP?")) return;
-
-//     try {
-//         // 1. Obtener detalles
-//         const { data: pedidoInfo, error: errP } = await _supabase
-//             .from('pedidos')
-//             .select(`cliente_nombre, pedido_detalle(cantidad, producto_id, productos(nombre, precios(precio_venta)))`)
-//             .eq('id', pedidoId)
-//             .single();
-
-//         if (errP) throw new Error("No se pudo obtener la info del pedido");
-
-//         const detalles = pedidoInfo.pedido_detalle;
-//         let totalPedido = 0;
-        
-//         // Calculamos el total con un fallback por si no hay precio
-//         detalles.forEach(d => {
-//              const precio = d.productos?.precios?.[0]?.precio_venta || 0;
-//              totalPedido += (d.cantidad * precio);
-//         });
-
-//         // VALIDACIÓN ANTES DE LLAMAR A AFIP
-//         if (totalPedido <= 0) {
-//             totalPedido = 100; // Un valor genérico para probar si el pedido vino sin precios
-//         }
-
-//         // 2. Invocar Edge Function
-//         const { data: afipData, error: afipError } = await _supabase.functions.invoke('afip-invoice', {
-//             body: { 
-//                 pedidoId: pedidoId,
-//                 total: totalPedido, // Ya es número
-//                 cliente: pedidoInfo.cliente_nombre || 'Consumidor Final'
-//             },
-//             headers: {
-//                 "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9teWxydWNrcXZlc2VtcmxvbWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNDE0MjIsImV4cCI6MjA4NTcxNzQyMn0.uWe09wGzCnYtIXPXTfhE7Z59iNda2YHjcqFBtKmcopU", 
-//                 "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9teWxydWNrcXZlc2VtcmxvbWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNDE0MjIsImV4cCI6MjA4NTcxNzQyMn0.uWe09wGzCnYtIXPXTfhE7Z59iNda2YHjcqFBtKmcopU" 
-//     }
-//         });
-
-//         // Si hay error en la función, lo mostramos pero no frenamos el mundo
-//         if (afipError || !afipData || !afipData.success) {
-//             console.error("Detalle error AFIP:", afipError);
-//             throw new Error(afipData?.error || "La función de AFIP no respondió correctamente");
-//         }
-// // Dentro de procesarPicking, luego de recibir afipData
-// if (afipData.ok) {
-//     // Aquí es donde antes tenías el alert
-//     await mostrarModalExito(afipData.cae, afipData.vto); 
-    
-//     // ESTA ES LA CLAVE: Volver a ejecutar tu función que llena la tabla de ventas
-//     if (typeof cargarVentas === 'function') {
-//         cargarVentas(); 
-//     }
-// }
-//         // 3. Si AFIP aprobó, procedemos a descontar stock
-//         for (const item of detalles) {
-//              const { data: pos } = await _supabase
-//                 .from('posiciones')
-//                 .select('id, cantidad')
-//                 .eq('producto_id', item.producto_id)
-//                 .gt('cantidad', 0)
-//                 .limit(1).single();
-
-//             if (pos) {
-//                 const nuevaCant = pos.cantidad - item.cantidad;
-//                 await _supabase.from('posiciones').update({ 
-//                     cantidad: nuevaCant, 
-//                     estado: nuevaCant <= 0 ? 'vacio' : 'ocupado',
-//                     producto_id: nuevaCant <= 0 ? null : item.producto_id 
-//                 }).eq('id', pos.id);
-
-//                 await _supabase.from('movimientos').insert([{
-//                     producto_id: item.producto_id,
-//                     tipo: 'SALIDA',
-//                     origen: pos.id,
-//                     destino: 'Venta (CAE ' + afipData.cae + ')',
-//                     cantidad: item.cantidad,
-//                     usuario: USUARIO_ACTUAL
-//                 }]);
-//             }
-//         }
-
-//         // 4. Guardar Factura con cae
-//         await _supabase.from('facturas').insert([{
-//             pedido_id: pedidoId,
-//             cliente_nombre: detalles[0]?.cliente_nombre || 'Cliente Vital Can',
-//             total_neto: totalPedido,
-//             iva: totalPedido * 0.21,
-//             total_final: totalPedido * 1.21,
-//             usuario: USUARIO_ACTUAL,
-//             cae: afipData.cae,
-//             cae_vto: afipData.caeFchVto,
-//             nro_comprobante: afipData.nroComprobante
-//         }]);
-
-//         // 5. Actualizar Pedido
-//         await _supabase.from('pedidos').update({ estado: 'preparado' }).eq('id', pedidoId);
-
-//         alert(`¡Factura Autorizada por AFIP!\nCAE: ${afipData.cae}\nVto: ${afipData.caeFchVto}`);
-//         renderPedidos();
-//     } catch (e) {
-//         console.error(e);
-//         alert("Error en el proceso: " + e.message);
-//     }
-// }
-
 // ==========================================
 // 5. MODALES Y UI HELPERS
 // ==========================================
