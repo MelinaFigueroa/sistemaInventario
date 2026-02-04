@@ -73,6 +73,16 @@ async function actualizarDashboard() {
 
     const { count } = await _supabase.from("movimientos").select("*", { count: 'exact', head: true });
     kpiMovs.innerText = count || 0;
+
+    // Nueva lógica para Stock Crítico (menos de 10 unidades)
+    const { data: criticos } = await _supabase
+        .from("posiciones")
+        .select("cantidad")
+        .lt("cantidad", 10)
+        .gt("cantidad", 0);
+
+    const kpiCritico = document.getElementById("kpi-critico");
+    if (kpiCritico) kpiCritico.innerText = criticos ? criticos.length : 0;
 }
 
 async function renderPosiciones() {
@@ -148,7 +158,7 @@ async function renderFacturacion() {
             </td>
             <td class="p-4 text-emerald-600 font-black italic text-sm">$${parseFloat(f.total_final).toLocaleString('es-AR')}</td>
             <td class="p-4 text-center">
-                <button class="text-slate-400 hover:text-indigo-600"><i class="fas fa-print"></i></button>
+                <button onclick="imprimirFactura('${f.id}')" class="text-slate-400 hover:text-indigo-600"><i class="fas fa-print"></i></button>
             </td>
         </tr>`;
     }).join("");
@@ -362,6 +372,124 @@ async function guardarPedidoSupabase() {
         renderPedidos();
     } catch (e) { console.error(e); }
 }
+async function mostrarUsuario() {
+    const userDisplay = document.getElementById("user-name"); // ID en el sidebar
+    if (!userDisplay) return;
+
+    // Intentamos obtener el usuario de la sesión de Supabase
+    const { data: { user } } = await _supabase.auth.getUser();
+
+    if (user) {
+        // Mostramos el nombre si existe en el metadata, sino el email
+        userDisplay.innerText = user.user_metadata?.full_name || user.email.split('@')[0];
+    } else {
+        userDisplay.innerText = "Meli Dev"; // Tu nombre por defecto
+    }
+}
+
+async function imprimirFactura(facturaId) {
+    try {
+        // 1. Obtener datos de la factura
+        const { data: factura, error: errF } = await _supabase
+            .from('facturas')
+            .select('*')
+            .eq('id', facturaId)
+            .single();
+        
+        if (errF) throw errF;
+
+        // 2. Obtener detalles del pedido asociado
+        const { data: detalles, error: errD } = await _supabase
+            .from('pedido_detalle')
+            .select(`cantidad, productos ( nombre, precio:precios(precio_venta) )`)
+            .eq('pedido_id', factura.pedido_id);
+
+        if (errD) throw errD;
+
+        // 3. Generar HTML para la ventana de impresión
+        const ventana = window.open('', '_blank');
+        
+        let filas = detalles.map(d => {
+            const precioUnit = d.productos.precio[0]?.precio_venta || 0;
+            const subtotal = precioUnit * d.cantidad;
+            return `
+                <tr>
+                    <td style="padding: 5px; border-bottom: 1px solid #eee;">${d.productos.nombre}</td>
+                    <td style="text-align: center; padding: 5px; border-bottom: 1px solid #eee;">${d.cantidad}</td>
+                    <td style="text-align: right; padding: 5px; border-bottom: 1px solid #eee;">$${precioUnit.toLocaleString('es-AR')}</td>
+                    <td style="text-align: right; padding: 5px; border-bottom: 1px solid #eee;">$${subtotal.toLocaleString('es-AR')}</td>
+                </tr>
+            `;
+        }).join('');
+
+        const contenido = `
+            <html>
+            <head>
+                <title>Factura #${factura.id.substring(0,8)}</title>
+                <style>
+                    body { font-family: sans-serif; padding: 20px; max-width: 800px; mx-auto; }
+                    .header { text-align: center; margin-bottom: 20px; text-transform: uppercase; }
+                    .info { margin-bottom: 20px; font-size: 12px; color: #555; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
+                    th { text-align: left; background: #f8f8f8; padding: 8px; font-size: 10px; uppercase; }
+                    .totales { text-align: right; font-weight: bold; font-size: 14px; margin-top: 10px; }
+                    .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #999; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>VITAL CAN</h2>
+                    <p>Comprobante de Venta</p>
+                </div>
+                
+                <div class="info">
+                    <p><strong>Fecha:</strong> ${new Date(factura.created_at).toLocaleString()}</p>
+                    <p><strong>Cliente:</strong> ${factura.cliente_nombre}</p>
+                    <p><strong>Factura N°:</strong> ${factura.id}</p>
+                    <p><strong>Vendedor:</strong> ${factura.usuario || 'Sistema'}</p>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th style="text-align: center;">Cant.</th>
+                            <th style="text-align: right;">Unitario</th>
+                            <th style="text-align: right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filas}
+                    </tbody>
+                </table>
+
+                <div class="totales">
+                    <p>Subtotal: $${factura.total_neto.toLocaleString('es-AR')}</p>
+                    <p>IVA (21%): $${factura.iva.toLocaleString('es-AR')}</p>
+                    <p style="font-size: 18px; color: #059669;">TOTAL: $${factura.total_final.toLocaleString('es-AR')}</p>
+                </div>
+
+                <div class="footer">
+                    <p>Gracias por su compra</p>
+                </div>
+                
+                <script>
+                    window.onload = function() { window.print(); }
+                </script>
+            </body>
+            </html>
+        `;
+
+        ventana.document.write(contenido);
+        ventana.document.close();
+    } catch (error) {
+        console.error("Error al imprimir:", error);
+        alert("No se pudo generar la factura para imprimir.");
+    }
+}
+
+// Llamá a la función cuando cargue la página
+window.addEventListener('DOMContentLoaded', mostrarUsuario);
 
 // Escuchar teclas globales
 document.addEventListener('keydown', (e) => {
