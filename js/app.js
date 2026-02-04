@@ -1,14 +1,50 @@
 // ==========================================
-// 1. CONFIGURACIÓN DE SUPABASE
+// 1. CONFIGURACIÓN Y ESTADO
 // ==========================================
 const _supabase = supabase.createClient(
     "https://omylruckqvesemrlomed.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9teWxydWNrcXZlc2VtcmxvbWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNDE0MjIsImV4cCI6MjA4NTcxNzQyMn0.uWe09wGzCnYtIXPXTfhE7Z59iNda2YHjcqFBtKmcopU",
 );
 
-// Variables globales de estado
 let itemsPedidoTemporal = [];
 let USUARIO_ACTUAL = "Sistema";
+
+// ==========================================
+// 2. SISTEMA DE NOTIFICACIONES (SweetAlert2)
+// ==========================================
+const Notificar = {
+    toast(mensaje, icono = 'success') {
+        Swal.fire({
+            text: mensaje,
+            icon: icono,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            background: '#ffffff',
+            color: '#1e293b'
+        });
+    },
+    error(titulo, mensaje) {
+        Swal.fire({
+            title: titulo,
+            text: mensaje,
+            icon: 'error',
+            confirmButtonColor: '#4f46e5',
+            background: '#ffffff',
+            confirmButtonText: 'ENTENDIDO'
+        });
+    },
+    exito(titulo, mensaje) {
+        Swal.fire({
+            title: titulo,
+            html: mensaje,
+            icon: 'success',
+            confirmButtonColor: '#4f46e5'
+        });
+    }
+};
 
 // ==========================================
 // 2. CARGADOR DE PÁGINAS (SPA)
@@ -16,46 +52,26 @@ let USUARIO_ACTUAL = "Sistema";
 async function loadPage(pageUrl) {
     const container = document.getElementById("view-container");
     if (!container) return;
-
-    // Loader con onda
-    container.innerHTML =
-        '<div class="flex justify-center py-20"><i class="fas fa-paw animate-bounce text-4xl text-indigo-500"></i></div>';
-
-    // Actualizar URL sin recargar
-    const routeName = pageUrl.replace(".html", "");
-    window.history.pushState({}, "", `#/${routeName}`);
+    container.innerHTML = '<div class="flex justify-center py-20"><i class="fas fa-paw animate-bounce text-4xl text-indigo-500"></i></div>';
 
     try {
         const response = await fetch(pageUrl);
-        if (!response.ok) throw new Error("No se encontró: " + pageUrl);
         const content = await response.text();
-
         const parser = new DOMParser();
         const doc = parser.parseFromString(content, "text/html");
-        const mainContent = doc.querySelector("main");
-        container.innerHTML = mainContent ? mainContent.innerHTML : content;
+        container.innerHTML = doc.querySelector("main") ? doc.querySelector("main").innerHTML : content;
 
-        // Selector de scripts según la página cargada
-        const scripts = {
-            "inicio.html": actualizarDashboard,
-            "posiciones.html": renderPosiciones,
-            "movimientos.html": renderMovimientos,
-            "inventario.html": renderInventario,
-            "recepcion.html": prepararRecepcion,
-            "pedidos.html": renderPedidos,
-            "facturacion.html": renderFacturacion,
-        };
+        // Disparar renders según página
+        if (pageUrl.includes("posiciones")) renderPosiciones();
+        if (pageUrl.includes("pedidos")) renderPedidos();
+        if (pageUrl.includes("facturacion")) renderFacturacion();
+        if (pageUrl.includes("inicio")) actualizarDashboard();
+        if (pageUrl.includes("movimientos")) renderMovimientos();
+        if (pageUrl.includes("inventario")) renderInventario();
+        if (pageUrl.includes("recepcion")) prepararRecepcion();
 
-        for (const [key, func] of Object.entries(scripts)) {
-            if (pageUrl.includes(key)) {
-                setTimeout(func, 100);
-                break;
-            }
-        }
-
-        if (window.innerWidth < 768) toggleSidebar();
     } catch (error) {
-        container.innerHTML = `<div class="bg-red-50 p-6 rounded-2xl text-red-600 border border-red-200 font-black italic uppercase">Error: ${error.message}</div>`;
+        Notificar.error("ERROR", "No se pudo cargar la página.");
     }
 }
 
@@ -132,29 +148,26 @@ async function renderPosiciones() {
         .from("posiciones")
         .select("*")
         .order("id", { ascending: true });
+    
     if (error) return;
 
-    container.innerHTML = data
-        .map((pos) => {
-            const isVacio = pos.estado === "vacio";
-            const cardClass = isVacio
-                ? "opacity-60 border-dashed border-slate-300"
-                : "border-transparent hover:border-indigo-500 shadow-sm";
-            return `
-            <div onclick="${isVacio ? "" : `openDrawer('${pos.id}', 'Carga Vital Can', ${pos.cantidad}, 'Ubicación en Rack')`}" 
-                 class="relative bg-white border-2 p-5 rounded-2xl transition-all cursor-pointer ${cardClass}">
-                <div class="flex justify-between mb-3">
-                    <span class="text-[10px] font-black bg-slate-100 px-2 py-1 rounded text-slate-500">${pos.id}</span>
-                    ${!isVacio ? '<i class="fas fa-circle text-[8px] text-emerald-500"></i>' : ""}
-                </div>
-                <div class="flex flex-col items-center">
-                    <i class="fas ${isVacio ? "fa-plus text-slate-200" : "fa-box text-indigo-600"} text-2xl mb-2"></i>
-                    <h4 class="font-bold text-slate-800 text-sm uppercase italic">${isVacio ? "Vacío" : "Ocupado"}</h4>
-                    ${!isVacio ? `<p class="mt-2 text-indigo-700 text-[10px] font-black italic">${pos.cantidad} u.</p>` : ""}
-                </div>
-            </div>`;
-        })
-        .join("");
+    container.innerHTML = data.map((pos) => {
+        const isVacio = pos.estado === "vacio";
+        const cardClass = isVacio ? "opacity-60 border-dashed border-slate-300" : "border-transparent hover:border-indigo-500 shadow-sm";
+        return `
+        <div onclick="${isVacio ? "" : `openDrawer('${pos.id}', 'Stock Vital Can', ${pos.cantidad}, 'Ubicación en Depósito')`}" 
+             class="relative bg-white border-2 p-5 rounded-2xl transition-all cursor-pointer ${cardClass}">
+            <div class="flex justify-between mb-3">
+                <span class="text-[10px] font-black bg-slate-100 px-2 py-1 rounded text-slate-500">${pos.id}</span>
+                ${!isVacio ? '<i class="fas fa-circle text-[8px] text-emerald-500"></i>' : ""}
+            </div>
+            <div class="flex flex-col items-center">
+                <i class="fas ${isVacio ? "fa-plus text-slate-200" : "fa-box text-indigo-600"} text-2xl mb-2"></i>
+                <h4 class="font-bold text-slate-800 text-sm uppercase italic">${isVacio ? "Vacío" : "Ocupado"}</h4>
+                ${!isVacio ? `<p class="mt-2 text-indigo-700 text-[10px] font-black italic">${pos.cantidad} u.</p>` : ""}
+            </div>
+        </div>`;
+    }).join("");
 }
 
 async function renderPedidos() {
@@ -224,7 +237,7 @@ async function renderFacturacion() {
             <td class="p-4">
                 <div class="flex items-center gap-2">
                     <div class="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-black shadow-sm">${f.usuario?.charAt(0) || "M"}</div>
-                    <span class="text-xs text-slate-600 font-bold uppercase italic">${f.usuario || "MELI DEV"}</span>
+                    <span class="text-xs text-slate-600 font-bold uppercase italic">${f.usuario || ""}</span>
                 </div>
             </td>
             <td class="p-4 text-emerald-600 font-black italic text-sm">$${parseFloat(f.total_final).toLocaleString("es-AR")}</td>
@@ -298,23 +311,121 @@ async function renderMovimientos() {
     const tbody = document.getElementById("tabla-movimientos");
     if (!tbody) return;
 
-    const { data } = await _supabase
+    const { data, error } = await _supabase
         .from("movimientos")
-        .select("*, productos(nombre)")
+        .select(`
+            id, created_at, tipo, cantidad, origen, destino, usuario,
+            productos ( nombre )
+        `)
         .order("created_at", { ascending: false });
-    tbody.innerHTML = data
-        .map(
-            (mov) => `
-        <tr class="text-xs font-bold border-b border-slate-50">
-            <td class="p-4 text-slate-400 uppercase italic">${new Date(mov.created_at).toLocaleDateString()}</td>
-            <td class="p-4 text-slate-800 uppercase italic font-black">${mov.productos?.nombre || "---"}</td>
-            <td class="p-4"><span class="px-2 py-0.5 rounded-full bg-slate-100 text-[9px] font-black italic uppercase">${mov.tipo}</span></td>
-            <td class="p-4 text-slate-500 uppercase italic">${mov.origen} → ${mov.destino}</td>
-            <td class="p-4 font-black">${mov.cantidad}</td>
-        </tr>`,
-        )
-        .join("");
+
+    if (error) {
+        console.error("Error cargando movimientos:", error);
+        return;
+    }
+
+    tbody.innerHTML = data.map((mov) => {
+        // 1. Lógica de trazabilidad e íconos
+        const origen = mov.origen || '---';
+        const destino = mov.destino || '---';
+        let trazabilidadIcon = 'fa-long-arrow-alt-right';
+        
+        if (destino.includes('VENTA') || destino.includes('CLIENTE')) trazabilidadIcon = 'fa-shipping-fast text-rose-400';
+        if (origen.includes('PROVEEDOR')) trazabilidadIcon = 'fa-truck-loading text-emerald-400';
+        if (origen.includes('RACK') && destino.includes('RACK')) trazabilidadIcon = 'fa-exchange-alt text-indigo-400';
+if (mov.tipo.toUpperCase().includes('AJUSTE')) trazabilidadIcon = 'fa-tools text-amber-500';
+        // 2. Lógica de colores (Entrada vs Salida)
+        const esEntrada = mov.tipo.toUpperCase() === "ENTRADA";
+        const badgeClass = esEntrada 
+            ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
+            : 'bg-rose-100 text-rose-700 border-rose-200';
+
+        const iconTipo = esEntrada ? 'fa-arrow-down' : 'fa-arrow-up';
+        const signo = esEntrada ? '+' : '-';
+        const colorTexto = esEntrada ? 'text-emerald-600' : 'text-rose-600';
+
+        // 3. UN SOLO RETURN con toda la fila armada
+        return `
+            <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50">
+                <td class="p-4 text-slate-400 text-[10px] uppercase font-bold">
+                    ${new Date(mov.created_at).toLocaleDateString()}<br>
+                    ${new Date(mov.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                </td>
+                <td class="p-4 text-slate-800 italic uppercase font-black">
+                    ${mov.productos?.nombre || "PRODUCTO SIN NOMBRE"}
+                </td>
+                <td class="p-4">
+                    <span class="px-3 py-1 rounded-full border ${badgeClass} text-[9px] font-black uppercase flex items-center gap-1 w-fit italic">
+                        <i class="fas ${iconTipo}"></i> ${mov.tipo}
+                    </span>
+                </td>
+                <td class="p-4 text-indigo-600 font-black">
+                    <div class="flex items-center gap-2">
+                         <span class="text-xs uppercase italic">${mov.usuario || "SISTEMA"}</span>
+                    </div>
+                </td>
+                <td class="p-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-black">${origen}</span>
+                        <i class="fas ${trazabilidadIcon} text-xs"></i>
+                        <span class="text-[10px] bg-indigo-50 px-2 py-0.5 rounded text-indigo-700 font-black">${destino}</span>
+                    </div>
+                </td>
+                <td class="p-4">
+                    <span class="${colorTexto} font-black italic text-sm">
+                        ${signo}${mov.cantidad}
+                    </span>
+                </td>
+            </tr>`;
+    }).join("");
 }
+
+//BUSCADOR/FILTRO RENDER MOVIMIENTOS
+
+function filtrarMovimientos() {
+    const term = document.getElementById('buscar-movimiento').value.toLowerCase();
+    const filas = document.querySelectorAll('#tabla-movimientos tr');
+
+    filas.forEach(fila => {
+        const texto = fila.innerText.toLowerCase();
+        fila.style.display = texto.includes(term) ? '' : 'none';
+    });
+}
+
+//EXPORTAR PDF
+function exportarTablaAExcel(idTabla, nombreArchivo = 'reporte-vitalcan') {
+    const tabla = document.getElementById(idTabla);
+    // Buscamos el body si la tabla está vacía o el elemento mismo
+    const filas = Array.from(tabla.querySelectorAll('tr'));
+    
+    if (filas.length <= 1) { // 1 porque el header siempre está
+        return Notificar.error("SIN DATOS", "No hay movimientos para exportar en este momento.");
+    }
+
+    // El BOM permite que Excel reconozca los acentos y la Ñ correctamente
+    const BOM = "\uFEFF";
+    const contenidoCsv = filas.map(fila => {
+        const celdas = Array.from(fila.querySelectorAll('th, td'));
+        return celdas.map(celda => {
+            // Limpiamos el texto de saltos de línea y comillas
+            let texto = celda.innerText.replace(/\n/g, ' ').replace(/"/g, '""').trim();
+            return `"${texto}"`;
+        }).join(';'); // Punto y coma es mejor para el Excel en español
+    }).join('\n');
+
+    const blob = new Blob([BOM + contenidoCsv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${nombreArchivo}_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    Notificar.toast("Descargando reporte de trazabilidad...", "success");
+}
+
 
 // ==========================================
 // 4. LÓGICA DE NEGOCIO (PICKING Y FACTURACIÓN)
@@ -450,7 +561,7 @@ const Notificar = {
             }
         }
 
-        // 4. Guardar Factura
+ // 4. Guardar Factura en la Base de Datos
         await _supabase.from("facturas").insert([{
             pedido_id: pedidoId,
             cliente_nombre: pedidoInfo.cliente_nombre,
@@ -463,22 +574,28 @@ const Notificar = {
             nro_comprobante: afipData.nroComprobante,
         }]);
 
-        // 5. Actualizar Pedido
-        await _supabase.from("pedidos").update({ estado: "preparado" }).eq("id", pedidoId);
+        // 5. Actualizar estado del Pedido a "preparado"
+        await _supabase.from("pedidos")
+            .update({ estado: "preparado" })
+            .eq("id", pedidoId);
 
-        // ÉXITO FINAL
-        Swal.fire({
+        // ÉXITO FINAL: Cerramos el loader y mostramos el CAE
+        Swal.close(); 
+        
+        await Swal.fire({
             title: '¡FACTURA GENERADA!',
-            html: `Se autorizó el CAE <b>${afipData.cae}</b> con éxito.`,
+            html: `Se autorizó el CAE <b>${afipData.cae}</b> con éxito.<br>El stock ha sido descontado.`,
             icon: 'success',
             confirmButtonColor: '#4f46e5'
         });
 
+        // Refrescar las listas para ver los cambios
         renderPedidos();
         if (typeof renderFacturacion === "function") renderFacturacion();
 
     } catch (e) {
         console.error(e);
+        Swal.close();
         Notificar.error('ERROR EN EL PROCESO', e.message);
     }
 }
@@ -505,17 +622,204 @@ function closeDrawer() {
     document.getElementById("drawer-overlay").classList.add("hidden");
 }
 
+async function abrirModalPosicion() {
+    const { value: nombreRack } = await Swal.fire({
+        title: 'CREAR NUEVO RACK',
+        input: 'text',
+        inputLabel: 'Identificador (Ej: A-12, PASILLO-1)',
+        inputPlaceholder: 'Escribí el nombre del rack...',
+        showCancelButton: true,
+        confirmButtonColor: '#4f46e5',
+        confirmButtonText: 'CREAR AHORA',
+        cancelButtonText: 'CANCELAR',
+        inputValidator: (value) => { if (!value) return '¡El nombre es obligatorio!'; }
+    });
+
+    if (nombreRack) {
+        const { error } = await _supabase.from('posiciones').insert([{ id: nombreRack.toUpperCase(), estado: 'vacio', cantidad: 0 }]);
+        if (error) {
+            Notificar.error('ERROR', 'Ese nombre de rack ya existe o hubo un problema de conexión.');
+        } else {
+            Notificar.toast(`Rack ${nombreRack.toUpperCase()} creado`);
+            renderPosiciones();
+        }
+    }
+}
+
 async function abrirModalPedido() {
-    document.getElementById("modal-pedido").classList.remove("hidden");
+    // 1. Limpieza inicial para que no queden restos de un pedido anterior
     itemsPedidoTemporal = [];
     actualizarListaTemporal();
-    const { data: prods } = await _supabase
-        .from("productos")
-        .select("id, nombre, sku");
-    const select = document.getElementById("ped-producto-select");
-    select.innerHTML = prods
-        .map((p) => `<option value="${p.id}">${p.nombre} (${p.sku})</option>`)
-        .join("");
+    
+    // Limpiamos el input del cliente si existe
+    const inputCliente = document.getElementById("ped-cliente");
+    if (inputCliente) inputCliente.value = "";
+
+    try {
+        // 2. Traemos los productos de Supabase
+        const { data: prods, error } = await _supabase
+            .from("productos")
+            .select("id, nombre, sku")
+            .order("nombre", { ascending: true });
+
+        if (error) throw error;
+
+        // 3. Llenamos el select con los productos de Vital Can
+        const select = document.getElementById("ped-producto-select");
+        if (select) {
+            select.innerHTML = prods
+                .map((p) => `<option value="${p.id}">${p.nombre} (${p.sku})</option>`)
+                .join("");
+        }
+
+        // 4. Mostramos el modal (quitamos la clase 'hidden')
+        document.getElementById("modal-pedido").classList.remove("hidden");
+        
+        // 5. Un Toast sutil de que cargó todo bien
+        Notificar.toast("Catálogo cargado", "info");
+
+    } catch (e) {
+        console.error("Error al abrir modal:", e);
+        // Usamos tu alerta personalizada de error
+        Notificar.error("ERROR DE CARGA", "No se pudieron obtener los productos de la base de datos.");
+    }
+}
+
+async function abrirModalProducto() {
+    const { value: formValues } = await Swal.fire({
+        title: 'NUEVO PRODUCTO VITAL CAN',
+        html: `
+            <div class="text-left">
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Nombre Comercial</label>
+                <input id="swal-nombre" class="swal2-input !mt-1 !mb-4" placeholder="Ej: Vital Can Adulto 15kg">
+                
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-2">SKU / Código de Barras (Escaneá ahora)</label>
+                <input id="swal-sku" class="swal2-input !mt-1 !mb-4" placeholder="Escaneá con el celu...">
+                
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Stock Mínimo (Alerta)</label>
+                <input id="swal-minimo" type="number" class="swal2-input !mt-1" placeholder="Ej: 10">
+            </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonColor: '#4f46e5',
+        confirmButtonText: 'GUARDAR PRODUCTO',
+        cancelButtonText: 'CANCELAR',
+        background: '#ffffff',
+        didOpen: () => {
+            // Ponemos el foco en el SKU por si quieren escanear de una
+            document.getElementById('swal-sku').focus();
+        },
+        preConfirm: () => {
+            const nombre = document.getElementById('swal-nombre').value;
+            const sku = document.getElementById('swal-sku').value;
+            const minimo = document.getElementById('swal-minimo').value;
+            
+            if (!nombre || !sku) {
+                Swal.showValidationMessage('¡Nombre y SKU son obligatorios!');
+                return false;
+            }
+            return { nombre, sku, stock_minimo: minimo };
+        }
+    });
+
+    if (formValues) {
+        try {
+            const { error } = await _supabase.from('productos').insert([
+                { 
+                    nombre: formValues.nombre.toUpperCase(), 
+                    sku: formValues.sku.toUpperCase(), 
+                    stock_minimo: parseInt(formValues.stock_minimo) || 5 
+                }
+            ]);
+
+            if (error) throw error;
+
+            Notificar.toast("Producto guardado correctamente");
+            renderInventario(); // Refresca la grilla que tenés abajo
+        } catch (err) {
+            Notificar.error("ERROR AL GUARDAR", "Es posible que el SKU ya exista en la base de datos.");
+        }
+    }
+}
+
+async function abrirModalNuevoProducto() {
+    const { value: formValues } = await Swal.fire({
+        title: 'DAR DE ALTA NUEVO PRODUCTO',
+      html: `
+    <div class="text-left space-y-4 p-2">
+        <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Nombre del Producto (Vital Can)</label>
+            <input id="swal-nombre" class="swal2-input w-full m-0 rounded-xl border-slate-200 text-sm font-bold uppercase" placeholder="Ej: BALANCED ADULTO 20KG">
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Código SKU / Barra</label>
+                <div class="flex gap-1">
+                    <input id="swal-sku" class="swal2-input w-full m-0 rounded-xl border-slate-200 text-sm font-bold" placeholder="779...">
+                    <button type="button" onclick="escanearSKUNuevo()" class="bg-indigo-100 text-indigo-600 px-3 rounded-xl hover:bg-indigo-600 hover:text-white transition-all">
+                        <i class="fas fa-barcode"></i>
+                    </button>
+                </div>
+            </div>
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Stock Mínimo</label>
+                <input id="swal-minimo" type="number" class="swal2-input w-full m-0 rounded-xl border-slate-200 text-sm font-bold" placeholder="5">
+            </div>
+        </div>
+        
+        <div class="bg-slate-50 p-3 rounded-2xl border border-dashed border-slate-200 mt-2">
+            <p class="text-[9px] font-black text-slate-400 uppercase mb-2">¿Querés cargar desde el remito?</p>
+            <button type="button" onclick="document.getElementById('rec-pdf').click(); Swal.close();" class="text-indigo-600 font-bold text-xs flex items-center gap-2 hover:underline">
+                <i class="fas fa-magic"></i> Usar datos del remito ya subido
+            </button>
+        </div>
+    </div>
+`,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'GUARDAR PRODUCTO',
+        cancelButtonText: 'CANCELAR',
+        confirmButtonColor: '#4f46e5',
+        preConfirm: () => {
+            const nombre = document.getElementById('swal-nombre').value;
+            const sku = document.getElementById('swal-sku').value;
+            const minimo = document.getElementById('swal-minimo').value;
+            
+            if (!nombre || !sku) {
+                Swal.showValidationMessage('Nombre y SKU son obligatorios');
+                return false;
+            }
+            return { nombre: nombre.toUpperCase(), sku, stock_minimo: minimo || 0 };
+        }
+    });
+
+    if (formValues) {
+        try {
+            // Guardamos en Supabase
+            const { data, error } = await _supabase
+                .from('productos')
+                .insert([formValues])
+                .select();
+
+            if (error) throw error;
+
+            // Éxito: Recargamos el select de productos para que aparezca el nuevo
+            await cargarProductosSelect(); 
+            
+            // Seleccionamos automáticamente el producto recién creado
+            if (data && data[0]) {
+                document.getElementById('rec-producto').value = data[0].id;
+            }
+
+            Swal.fire('¡LISTO!', 'El producto ya está disponible para recibir.', 'success');
+
+        } catch (err) {
+            console.error(err);
+            Swal.fire('ERROR', 'No se pudo crear el producto. Quizás el SKU ya existe.', 'error');
+        }
+    }
 }
 
 function cerrarModalPedido() {
@@ -760,6 +1064,121 @@ async function imprimirFactura(facturaId) {
     }
 }
 
+//ESCANER DE CAMARA PARA CODIGO DE BARRAS
+
+async function activarEscaner() {
+    const { value: codigo } = await Swal.fire({
+        title: 'ESCANEAR PRODUCTO',
+        input: 'text',
+        inputPlaceholder: 'Escaneá el código de barras...',
+        showCancelButton: true,
+        confirmButtonText: 'BUSCAR',
+        inputAttributes: { 'autofocus': 'true' }
+    });
+
+    if (codigo) {
+        const select = document.getElementById('rec-producto');
+        // Buscamos el producto que tenga ese SKU en su texto
+        const opcion = Array.from(select.options).find(opt => opt.text.includes(codigo));
+        
+        if (opcion) {
+            select.value = opcion.value;
+            Notificar.exito("Producto Identificado", opcion.text);
+        } else {
+            Notificar.error("No Encontrado", "El código no coincide con ningún producto.");
+        }
+    }
+}
+
+async function subirRemito(archivo) {
+    const fileExt = archivo.name.split('.').pop();
+    const fileName = `${Date.now()}_remito.${fileExt}`;
+    const filePath = `remitos/${fileName}`;
+
+    // Subimos al bucket "logistica" (aseguráte de crearlo en Supabase)
+    const { data, error } = await _supabase.storage
+        .from('logistica')
+        .upload(filePath, archivo);
+
+    if (error) throw error;
+
+    // Obtenemos la URL pública
+    const { data: urlData } = _supabase.storage
+        .from('logistica')
+        .getPublicUrl(filePath);
+
+    return urlData.publicUrl;
+}
+
+async function confirmarIngresoReal() {
+    const fileInput = document.getElementById('rec-pdf');
+    const archivo = fileInput.files[0];
+    
+    // Alerta de carga
+    Swal.fire({
+        title: 'PROCESANDO INGRESO',
+        text: 'Subiendo documento y actualizando stock...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    try {
+        let urlRemito = null;
+        if (archivo) {
+            urlRemito = await subirRemito(archivo);
+        }
+
+        // Guardamos el movimiento con la URL del PDF
+        const { error } = await _supabase
+            .from('movimientos')
+            .insert([{
+                producto_id: document.getElementById('rec-producto').value,
+                cantidad: document.getElementById('rec-cantidad').value,
+                tipo: 'ENTRADA',
+                origen: 'PROVEEDOR',
+                destino: document.getElementById('rec-destino').value,
+                remito_url: urlRemito, // <--- Guardamos la URL aquí
+                usuario: 'OPERARIO_VITALCAN'
+            }]);
+
+        if (error) throw error;
+
+        Swal.fire('¡ÉXITO!', 'Mercadería recibida y documento guardado.', 'success');
+        
+    } catch (err) {
+        console.error(err);
+        Notificar.error("ERROR", "No se pudo procesar la recepción.");
+    }
+}
+
+// Función estética para el label
+async function actualizarNombreArchivo(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    document.getElementById('label-archivo').innerText = `Procesando: ${file.name}...`;
+
+    // Iniciamos la lectura automática
+    Tesseract.recognize(file, 'spa', { logger: m => console.log(m) }).then(({ data: { text } }) => {
+        console.log("Texto extraído:", text);
+        
+        // 1. Intentar buscar el Número de Remito (Patrón común: XXX-XXXX)
+        const matchRemito = text.match(/\d{3,4}-\d{4,8}/);
+        if (matchRemito) {
+            document.getElementById('rec-remito').value = matchRemito[0];
+        }
+
+        // 2. Intentar buscar la Cantidad (Número cerca de palabras como 'unidades' o 'cant')
+        const matchCant = text.match(/(?:CANT|CANTIDAD|UNIDADES)[:\s]+(\d+)/i);
+        if (matchCant) {
+            document.getElementById('rec-cantidad').value = matchCant[1];
+        }
+
+        Notificar.toast("Datos del remito extraídos", "info");
+        document.getElementById('label-archivo').innerText = `Archivo listo: ${file.name}`;
+    });
+}
+
 // Llamá a la función cuando cargue la página
 window.addEventListener("DOMContentLoaded", mostrarUsuario);
 
@@ -771,7 +1190,12 @@ document.addEventListener("keydown", (e) => {
     }
 });
 
-
+document.addEventListener('DOMContentLoaded', () => {
+    // Si estamos en la sección de movimientos, cargamos los datos
+    if (document.getElementById('tabla-movimientos')) {
+        renderMovimientos();
+    }
+});
 
 // ==========================================
 // 6. INICIO

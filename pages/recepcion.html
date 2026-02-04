@@ -1,43 +1,85 @@
 <main class="max-w-3xl mx-auto p-4 md:p-6 animate-fadeIn">
-    <header class="mb-8 text-nowrap">
-        <h2 class="text-2xl font-bold text-slate-800 italic uppercase tracking-tighter">Recepción de Mercadería</h2>
-        <p class="text-slate-500 font-bold">Distribuidora Vital Can - Ingreso a Stock</p>
+    <header class="mb-8 flex justify-between items-end">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800 italic uppercase tracking-tighter">Recepción de Mercadería</h2>
+            <p class="text-slate-500 font-bold">Distribuidora Vital Can - Ingreso a Stock</p>
+        </div>
+        <button onclick="abrirModalNuevoProducto()"
+    class="group bg-white text-slate-700 px-4 py-2 rounded-xl shadow-sm border border-slate-200 font-bold hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-2 text-xs uppercase italic">
+    <i class="fas fa-box-open group-hover:scale-110 transition-transform"></i>
+    <span class="hidden md:block">Nuevo Producto</span>
+    <i class="fas fa-plus text-[8px]"></i>
+</button>
     </header>
 
     <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
         <div class="p-8">
             <form id="form-recepcion" class="space-y-6">
-                <div>
-                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest italic mb-2">Producto Vital Can</label>
-                    <select id="rec-producto" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 outline-none font-bold text-slate-700 transition-all uppercase italic">
-                        <option value="">Cargando productos...</option>
-                    </select>
+                <div class="relative group">
+                    <label
+                        class="block text-xs font-black text-slate-400 uppercase tracking-widest italic mb-2">Escanear o
+                        Seleccionar Producto</label>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <i class="fas fa-barcode absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <select id="rec-producto"
+                                class="w-full pl-12 p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 outline-none font-bold text-slate-700 transition-all uppercase italic appearance-none">
+                                <option value="">Cargando productos...</option>
+                            </select>
+                        </div>
+                        <button type="button" onclick="activarEscaner()"
+                            class="bg-indigo-600 text-white px-6 rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest italic mb-2">Cantidad Bolsas</label>
-                        <input type="number" id="rec-cantidad" placeholder="0" 
+                        <label
+                            class="block text-xs font-black text-slate-400 uppercase tracking-widest italic mb-2">Cantidad
+                            Bolsas</label>
+                        <input type="number" id="rec-cantidad" placeholder="0"
                             class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 outline-none font-bold text-slate-700 transition-all">
                     </div>
                     <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest italic mb-2">Ubicación (Rack)</label>
-                        <select id="rec-destino" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 outline-none font-bold text-slate-700 transition-all uppercase italic">
+                        <label
+                            class="block text-xs font-black text-slate-400 uppercase tracking-widest italic mb-2">Ubicación
+                            (Rack)</label>
+                        <select id="rec-destino"
+                            class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 outline-none font-bold text-slate-700 transition-all uppercase italic">
                             <option value="">Cargando racks...</option>
                         </select>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest italic mb-2">Referencia / N° Remito</label>
-                    <input type="text" id="rec-remito" placeholder="Ej: VITAL-CAN-999" 
-                        class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 outline-none font-bold text-slate-700 transition-all uppercase italic font-bold">
+                    <label
+                        class="block text-xs font-black text-slate-400 uppercase tracking-widest italic mb-2">Referencia
+                        / N° Remito</label>
+                    <input type="text" id="rec-remito" placeholder="EJ: VITAL-CAN-999"
+                        class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 outline-none font-bold text-slate-700 transition-all uppercase italic">
                 </div>
 
+                <div class="mb-6">
+                    <label
+                        class="block text-xs font-black text-slate-400 uppercase tracking-widest italic mb-2">Adjuntar
+                        Remito (PDF/Foto)</label>
+                    <div class="relative group">
+                        <input type="file" id="rec-pdf" accept="application/pdf,image/*" class="hidden"
+                            onchange="actualizarNombreArchivo(this)">
+                        <label for="rec-pdf"
+                            class="flex items-center justify-center gap-3 w-full p-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-all">
+                            <i class="fas fa-cloud-upload-alt text-slate-400 group-hover:text-indigo-500"></i>
+                            <span id="label-archivo" class="text-slate-500 font-bold text-sm italic">Seleccionar archivo
+                                o sacar foto...</span>
+                        </label>
+                    </div>
+                </div>
                 <div class="pt-4">
-                    <button type="button" onclick="confirmarIngresoReal()" 
-                        class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black italic uppercase shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 transition-all">
-                        Confirmar Ingreso en Supabase
+                    <button type="button" onclick="confirmarIngresoReal()"
+                        class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black italic uppercase shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-3">
+                        <i class="fas fa-check-circle"></i> Confirmar Ingreso en Supabase
                     </button>
                 </div>
             </form>
