@@ -140,25 +140,38 @@ async function renderFacturacion() {
     const kpiVentas = document.getElementById("total-ventas-dia");
     if (!tbody) return;
 
+    // Traemos todos los campos, incluyendo los nuevos
     const { data, error } = await _supabase.from("facturas").select("*").order("created_at", { ascending: false });
     if (error) return;
 
     let totalDia = 0;
     tbody.innerHTML = data.map(f => {
         totalDia += parseFloat(f.total_final);
+        
+        // Si nro_comprobante no existe todavía, usamos el ID corto como backup
+        const nroAMostrar = f.nro_comprobante ? f.nro_comprobante : f.id.substring(0, 8);
+        
         return `
         <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50">
-            <td class="p-4 text-slate-400">#${f.id.substring(0, 8)}<br><span class="text-[9px] font-bold uppercase">${new Date(f.created_at).toLocaleDateString()}</span></td>
-            <td class="p-4 text-slate-700 uppercase font-black italic">${f.cliente_nombre}</td>
+            <td class="p-4 text-slate-400">
+                <span class="text-slate-700 font-black">#${nroAMostrar}</span><br>
+                <span class="text-[9px] font-bold uppercase">${new Date(f.created_at).toLocaleDateString()}</span>
+            </td>
+            <td class="p-4 text-slate-700 uppercase font-black italic">
+                ${f.cliente_nombre}
+                ${f.cae ? `<br><span class="text-[8px] text-emerald-500 font-normal">CAE: ${f.cae}</span>` : ''}
+            </td>
             <td class="p-4">
                 <div class="flex items-center gap-2">
                     <div class="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-black shadow-sm">${f.usuario?.charAt(0) || 'M'}</div>
-                    <span class="text-xs text-slate-600 font-bold uppercase italic">${f.usuario || USUARIO_ACTUAL}</span>
+                    <span class="text-xs text-slate-600 font-bold uppercase italic">${f.usuario || 'MELI DEV'}</span>
                 </div>
             </td>
             <td class="p-4 text-emerald-600 font-black italic text-sm">$${parseFloat(f.total_final).toLocaleString('es-AR')}</td>
             <td class="p-4 text-center">
-                <button onclick="imprimirFactura('${f.id}')" class="text-slate-400 hover:text-indigo-600"><i class="fas fa-print"></i></button>
+                <button onclick="imprimirFactura('${f.id}')" class="text-slate-400 hover:text-indigo-600">
+                    <i class="fas fa-print"></i>
+                </button>
             </td>
         </tr>`;
     }).join("");
