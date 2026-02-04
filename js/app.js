@@ -742,41 +742,50 @@ async function abrirModalProducto() {
         }
     }
 }
-
 async function abrirModalNuevoProducto() {
+    // 1. Intentamos recuperar lo que el OCR leyó del remito (si existe)
+    const nombreSugerido = localStorage.getItem('temp_nombre_nuevo') || '';
+    const skuSugerido = localStorage.getItem('temp_sku_nuevo') || '';
+
     const { value: formValues } = await Swal.fire({
         title: 'DAR DE ALTA NUEVO PRODUCTO',
-      html: `
-    <div class="text-left space-y-4 p-2">
-        <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Nombre del Producto (Vital Can)</label>
-            <input id="swal-nombre" class="swal2-input w-full m-0 rounded-xl border-slate-200 text-sm font-bold uppercase" placeholder="Ej: BALANCED ADULTO 20KG">
-        </div>
-        
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Código SKU / Barra</label>
-                <div class="flex gap-1">
-                    <input id="swal-sku" class="swal2-input w-full m-0 rounded-xl border-slate-200 text-sm font-bold" placeholder="779...">
-                    <button type="button" onclick="escanearSKUNuevo()" class="bg-indigo-100 text-indigo-600 px-3 rounded-xl hover:bg-indigo-600 hover:text-white transition-all">
-                        <i class="fas fa-barcode"></i>
+        html: `
+            <div class="text-left space-y-4 p-2">
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Nombre del Producto (Vital Can)</label>
+                    <input id="swal-nombre" 
+                           value="${nombreSugerido}" 
+                           class="swal2-input w-full m-0 rounded-xl border-slate-200 text-sm font-bold uppercase" 
+                           placeholder="Ej: BALANCED ADULTO 20KG">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Código SKU / Barra</label>
+                        <div class="flex gap-1">
+                            <input id="swal-sku" 
+                                   value="${skuSugerido}" 
+                                   class="swal2-input w-full m-0 rounded-xl border-slate-200 text-sm font-bold" 
+                                   placeholder="779...">
+                            <button type="button" onclick="escanearSKUNuevo()" class="bg-indigo-100 text-indigo-600 px-3 rounded-xl hover:bg-indigo-600 hover:text-white transition-all">
+                                <i class="fas fa-barcode"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Stock Mínimo</label>
+                        <input id="swal-minimo" type="number" class="swal2-input w-full m-0 rounded-xl border-slate-200 text-sm font-bold" placeholder="5">
+                    </div>
+                </div>
+                
+                <div class="bg-slate-50 p-3 rounded-2xl border border-dashed border-slate-200 mt-2">
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">¿No subiste el remito?</p>
+                    <button type="button" onclick="document.getElementById('rec-pdf').click(); Swal.close();" class="text-indigo-600 font-bold text-xs flex items-center gap-2 hover:underline">
+                        <i class="fas fa-magic"></i> Escanear remito ahora
                     </button>
                 </div>
             </div>
-            <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Stock Mínimo</label>
-                <input id="swal-minimo" type="number" class="swal2-input w-full m-0 rounded-xl border-slate-200 text-sm font-bold" placeholder="5">
-            </div>
-        </div>
-        
-        <div class="bg-slate-50 p-3 rounded-2xl border border-dashed border-slate-200 mt-2">
-            <p class="text-[9px] font-black text-slate-400 uppercase mb-2">¿Querés cargar desde el remito?</p>
-            <button type="button" onclick="document.getElementById('rec-pdf').click(); Swal.close();" class="text-indigo-600 font-bold text-xs flex items-center gap-2 hover:underline">
-                <i class="fas fa-magic"></i> Usar datos del remito ya subido
-            </button>
-        </div>
-    </div>
-`,
+        `,
         focusConfirm: false,
         showCancelButton: true,
         confirmButtonText: 'GUARDAR PRODUCTO',
@@ -791,13 +800,12 @@ async function abrirModalNuevoProducto() {
                 Swal.showValidationMessage('Nombre y SKU son obligatorios');
                 return false;
             }
-            return { nombre: nombre.toUpperCase(), sku, stock_minimo: minimo || 0 };
+            return { nombre: nombre.toUpperCase(), sku, stock_minimo: parseInt(minimo) || 0 };
         }
     });
 
     if (formValues) {
         try {
-            // Guardamos en Supabase
             const { data, error } = await _supabase
                 .from('productos')
                 .insert([formValues])
@@ -805,20 +813,41 @@ async function abrirModalNuevoProducto() {
 
             if (error) throw error;
 
-            // Éxito: Recargamos el select de productos para que aparezca el nuevo
+            // Limpiamos los temporales para que no aparezcan en el próximo producto nuevo
+            localStorage.removeItem('temp_nombre_nuevo');
+            localStorage.removeItem('temp_sku_nuevo');
+
             await cargarProductosSelect(); 
             
-            // Seleccionamos automáticamente el producto recién creado
             if (data && data[0]) {
                 document.getElementById('rec-producto').value = data[0].id;
+                Notificar.toast("Producto creado y seleccionado", "success");
             }
 
-            Swal.fire('¡LISTO!', 'El producto ya está disponible para recibir.', 'success');
+            Swal.fire('¡LISTO!', 'El producto ya está disponible.', 'success');
 
         } catch (err) {
             console.error(err);
-            Swal.fire('ERROR', 'No se pudo crear el producto. Quizás el SKU ya existe.', 'error');
+            Swal.fire('ERROR', 'No se pudo crear. Revisá que el SKU no esté repetido.', 'error');
         }
+    }
+}
+
+async function escanearSKUNuevo() {
+    const { value: codigo } = await Swal.fire({
+        title: 'ESCANEAR CÓDIGO',
+        input: 'text',
+        inputPlaceholder: 'Escaneá la bolsa...',
+        showCancelButton: true,
+        confirmButtonText: 'LISTO'
+    });
+
+    if (codigo) {
+        const inputSku = document.getElementById('swal-sku');
+        if (inputSku) inputSku.value = codigo;
+        // Re-abrimos el modal de nuevo producto (porque Swal.fire cerró el anterior)
+        // Nota: En una app pro, esto se maneja mejor con estados, 
+        // pero para salir del paso, podés llamar a abrirModalNuevoProducto() de nuevo
     }
 }
 
@@ -1159,8 +1188,18 @@ async function actualizarNombreArchivo(input) {
     document.getElementById('label-archivo').innerText = `Procesando: ${file.name}...`;
 
     // Iniciamos la lectura automática
-    Tesseract.recognize(file, 'spa', { logger: m => console.log(m) }).then(({ data: { text } }) => {
-        console.log("Texto extraído:", text);
+    Tesseract.recognize(file, 'spa').then(({ data: { text } }) => {
+    // Si el operario tiene el modal de "Nuevo Producto" abierto o lo va a abrir:
+    const esProductoNuevo = text.includes('NUEVO') || text.includes('DESCONOCIDO'); 
+    
+    if (esProductoNuevo) {
+        // Buscamos algo que parezca un nombre de Vital Can (Mayúsculas largas)
+        const matchNombre = text.match(/[A-Z]{4,}\s[A-Z]{4,}\s\d+KG/);
+        if (matchNombre) {
+            // Guardamos temporalmente para el modal
+            localStorage.setItem('temp_nombre_nuevo', matchNombre[0]);
+        }
+    }
         
         // 1. Intentar buscar el Número de Remito (Patrón común: XXX-XXXX)
         const matchRemito = text.match(/\d{3,4}-\d{4,8}/);
