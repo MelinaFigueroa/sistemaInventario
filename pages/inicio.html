@@ -5,33 +5,34 @@
     </header>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 border-b-4 border-b-indigo-500">
+        <div onclick="loadPage('inventario.html')" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 border-b-4 border-b-indigo-500 cursor-pointer hover:bg-slate-50 transition-all group">
             <div class="flex justify-between items-start mb-4">
-                <div class="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
+                <div class="p-3 bg-indigo-50 rounded-2xl text-indigo-600 group-hover:scale-110 transition-transform">
                     <i class="fas fa-boxes-stacked text-xl"></i>
                 </div>
-                <span class="text-[10px] font-black text-emerald-500 uppercase italic">Activo</span>
+                <span class="text-[10px] font-black text-emerald-500 uppercase italic">Ver Todo</span>
             </div>
             <p class="text-slate-400 text-xs font-black uppercase tracking-wider italic">Bolsas en Stock</p>
             <p id="kpi-stock" class="text-4xl font-black text-slate-800 mt-1">...</p>
         </div>
 
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 border-b-4 border-b-amber-500">
+        <div onclick="loadPage('posiciones.html')" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 border-b-4 border-b-amber-500 cursor-pointer hover:bg-slate-50 transition-all group">
             <div class="flex justify-between items-start mb-4">
-                <div class="p-3 bg-amber-50 rounded-2xl text-amber-600">
+                <div class="p-3 bg-amber-50 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform">
                     <i class="fas fa-triangle-exclamation text-xl"></i>
                 </div>
-                <span class="text-[10px] font-black text-amber-500 uppercase italic">Atención</span>
+                <span class="text-[10px] font-black text-amber-500 uppercase italic">Revisar</span>
             </div>
             <p class="text-slate-400 text-xs font-black uppercase tracking-wider italic">Stock Crítico</p>
             <p id="kpi-critico" class="text-4xl font-black text-slate-800 mt-1">...</p>
         </div>
 
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 border-b-4 border-b-slate-800">
+        <div onclick="loadPage('movimientos.html')" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 border-b-4 border-b-slate-800 cursor-pointer hover:bg-slate-50 transition-all group">
             <div class="flex justify-between items-start mb-4">
-                <div class="p-3 bg-slate-50 rounded-2xl text-slate-600">
+                <div class="p-3 bg-slate-50 rounded-2xl text-slate-600 group-hover:scale-110 transition-transform">
                     <i class="fas fa-route text-xl"></i>
                 </div>
+                <span class="text-[10px] font-black text-slate-400 uppercase italic">Historial</span>
             </div>
             <p class="text-slate-400 text-xs font-black uppercase tracking-wider italic">Movs. Realizados</p>
             <p id="kpi-movs" class="text-4xl font-black text-slate-800 mt-1">...</p>
@@ -49,11 +50,11 @@
         <div class="bg-slate-900 rounded-3xl p-6 text-white shadow-xl shadow-indigo-100">
             <h3 class="text-sm font-black text-indigo-400 uppercase tracking-widest italic mb-6">Acciones Rápidas</h3>
             <div class="grid grid-cols-2 gap-4">
-                <button onclick="loadPage('recepcion.html')" class="flex flex-col items-center justify-center p-4 bg-slate-800 rounded-2xl hover:bg-indigo-600 transition-all group">
+                <button onclick="loadPage('recepcion.html')" class="flex flex-col items-center justify-center p-4 bg-slate-800 rounded-2xl hover:bg-indigo-600 transition-all group border border-slate-700">
                     <i class="fas fa-truck-ramp-box mb-2 text-xl group-hover:scale-110 transition-transform text-indigo-400"></i>
-                    <span class="text-[10px] font-bold uppercase italic">Recibir Vital Can</span>
+                    <span class="text-[10px] font-bold uppercase italic">Recibir Mercadería</span>
                 </button>
-                <button onclick="loadPage('pedidos.html')" class="flex flex-col items-center justify-center p-4 bg-slate-800 rounded-2xl hover:bg-indigo-600 transition-all group">
+                <button onclick="loadPage('pedidos.html')" class="flex flex-col items-center justify-center p-4 bg-slate-800 rounded-2xl hover:bg-indigo-600 transition-all group border border-slate-700">
                     <i class="fas fa-file-invoice mb-2 text-xl group-hover:scale-110 transition-transform text-indigo-400"></i>
                     <span class="text-[10px] font-bold uppercase italic">Nuevo Pedido</span>
                 </button>
