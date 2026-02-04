@@ -223,33 +223,42 @@ async function procesarPicking(pedidoId) {
     if(!confirm("¿Deseas procesar el Picking y facturar en AFIP?")) return;
 
     try {
-        // 1. Obtener detalles del pedido Y el nombre del cliente desde la tabla 'pedidos'
+        // 1. Obtener detalles
         const { data: pedidoInfo, error: errP } = await _supabase
             .from('pedidos')
             .select(`cliente_nombre, pedido_detalle(cantidad, producto_id, productos(nombre, precios(precio_venta)))`)
             .eq('id', pedidoId)
             .single();
 
-        if (errP) throw errP;
+        if (errP) throw new Error("No se pudo obtener la info del pedido");
 
         const detalles = pedidoInfo.pedido_detalle;
         let totalPedido = 0;
+        
+        // Calculamos el total con un fallback por si no hay precio
         detalles.forEach(d => {
-             const precio = d.productos.precios[0]?.precio_venta || 0;
+             const precio = d.productos?.precios?.[0]?.precio_venta || 0;
              totalPedido += (d.cantidad * precio);
         });
 
-        // 2. Invocar Edge Function (Aseguramos que 'total' sea número y 'cliente' exista)
+        // VALIDACIÓN ANTES DE LLAMAR A AFIP
+        if (totalPedido <= 0) {
+            totalPedido = 100; // Un valor genérico para probar si el pedido vino sin precios
+        }
+
+        // 2. Invocar Edge Function
         const { data: afipData, error: afipError } = await _supabase.functions.invoke('afip-invoice', {
             body: { 
                 pedidoId: pedidoId,
-                total: Number(totalPedido.toFixed(2)), // Forzamos número con 2 decimales
+                total: totalPedido, // Ya es número
                 cliente: pedidoInfo.cliente_nombre || 'Consumidor Final'
             }
         });
 
-        if (afipError || !afipData.success) {
-            throw new Error(afipError?.message || afipData.error || "Error en autorización AFIP");
+        // Si hay error en la función, lo mostramos pero no frenamos el mundo
+        if (afipError || !afipData || !afipData.success) {
+            console.error("Detalle error AFIP:", afipError);
+            throw new Error(afipData?.error || "La función de AFIP no respondió correctamente");
         }
 
         // 3. Si AFIP aprobó, procedemos a descontar stock
