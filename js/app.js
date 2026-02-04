@@ -8,7 +8,7 @@ const _supabase = supabase.createClient(
 
 // Variables globales de estado
 let itemsPedidoTemporal = [];
-const USUARIO_ACTUAL = "Meli Dev";
+let USUARIO_ACTUAL = "Sistema";
 
 // ==========================================
 // 2. CARGADOR DE PÁGINAS (SPA)
@@ -220,25 +220,41 @@ async function renderMovimientos() {
 // ==========================================
 
 async function procesarPicking(pedidoId) {
-    if(!confirm("¿Deseas procesar el Picking (descontar stock) y facturar este pedido?")) return;
+    if(!confirm("¿Deseas procesar el Picking y facturar en AFIP?")) return;
 
     try {
-        // 1. Obtener detalles y precios
-        const { data: detalles, error } = await _supabase
-            .from('pedido_detalle')
-            .select(`cantidad, producto_id, productos ( nombre, precios ( precio_venta ) )`)
-            .eq('pedido_id', pedidoId);
+        // 1. Obtener detalles del pedido Y el nombre del cliente desde la tabla 'pedidos'
+        const { data: pedidoInfo, error: errP } = await _supabase
+            .from('pedidos')
+            .select(`cliente_nombre, pedido_detalle(cantidad, producto_id, productos(nombre, precios(precio_venta)))`)
+            .eq('id', pedidoId)
+            .single();
 
-        if (error) throw error;
+        if (errP) throw errP;
 
+        const detalles = pedidoInfo.pedido_detalle;
         let totalPedido = 0;
+        detalles.forEach(d => {
+             const precio = d.productos.precios[0]?.precio_venta || 0;
+             totalPedido += (d.cantidad * precio);
+        });
 
-        // 2. Por cada producto, descontar de los racks y registrar salida
+        // 2. Invocar Edge Function (Aseguramos que 'total' sea número y 'cliente' exista)
+        const { data: afipData, error: afipError } = await _supabase.functions.invoke('afip-invoice', {
+            body: { 
+                pedidoId: pedidoId,
+                total: Number(totalPedido.toFixed(2)), // Forzamos número con 2 decimales
+                cliente: pedidoInfo.cliente_nombre || 'Consumidor Final'
+            }
+        });
+
+        if (afipError || !afipData.success) {
+            throw new Error(afipError?.message || afipData.error || "Error en autorización AFIP");
+        }
+
+        // 3. Si AFIP aprobó, procedemos a descontar stock
         for (const item of detalles) {
-            const precio = item.productos.precios[0]?.precio_venta || 0;
-            totalPedido += (item.cantidad * precio);
-
-            const { data: pos } = await _supabase
+             const { data: pos } = await _supabase
                 .from('posiciones')
                 .select('id, cantidad')
                 .eq('producto_id', item.producto_id)
@@ -257,31 +273,34 @@ async function procesarPicking(pedidoId) {
                     producto_id: item.producto_id,
                     tipo: 'SALIDA',
                     origen: pos.id,
-                    destino: 'Venta Cliente',
+                    destino: 'Venta (CAE ' + afipData.cae + ')',
                     cantidad: item.cantidad,
                     usuario: USUARIO_ACTUAL
                 }]);
             }
         }
 
-        // 3. Crear Factura Final
+        // 4. Guardar Factura con cae
         await _supabase.from('facturas').insert([{
             pedido_id: pedidoId,
             cliente_nombre: detalles[0]?.cliente_nombre || 'Cliente Vital Can',
             total_neto: totalPedido,
             iva: totalPedido * 0.21,
             total_final: totalPedido * 1.21,
-            usuario: USUARIO_ACTUAL
+            usuario: USUARIO_ACTUAL,
+            cae: afipData.cae,
+            cae_vto: afipData.caeFchVto,
+            nro_comprobante: afipData.nroComprobante
         }]);
 
-        // 4. Actualizar Pedido
+        // 5. Actualizar Pedido
         await _supabase.from('pedidos').update({ estado: 'preparado' }).eq('id', pedidoId);
 
-        alert("¡Proceso completado! Stock actualizado y Factura generada.");
+        alert(`¡Factura Autorizada por AFIP!\nCAE: ${afipData.cae}\nVto: ${afipData.caeFchVto}`);
         renderPedidos();
     } catch (e) {
         console.error(e);
-        alert("Error en el picking/facturación.");
+        alert("Error en el proceso: " + e.message);
     }
 }
 
@@ -373,17 +392,28 @@ async function guardarPedidoSupabase() {
     } catch (e) { console.error(e); }
 }
 async function mostrarUsuario() {
-    const userDisplay = document.getElementById("user-name"); // ID en el sidebar
-    if (!userDisplay) return;
+    const userSidebarName = document.getElementById("user-sidebar-name");
+    const userSidebarInitial = document.getElementById("user-sidebar-initial");
+    const userHeaderGreeting = document.getElementById("user-header-greeting");
 
     // Intentamos obtener el usuario de la sesión de Supabase
     const { data: { user } } = await _supabase.auth.getUser();
 
     if (user) {
-        // Mostramos el nombre si existe en el metadata, sino el email
-        userDisplay.innerText = user.user_metadata?.full_name || user.email.split('@')[0];
-    } else {
-        userDisplay.innerText = "Meli Dev"; // Tu nombre por defecto
+        // Obtenemos nombre o email
+        const nombreCompleto = user.user_metadata?.full_name || user.email;
+        const nombreCorto = nombreCompleto.split('@')[0]; // Si es email, sacamos lo de antes del @
+        const inicial = nombreCompleto.charAt(0).toUpperCase();
+
+        // Actualizar Sidebar
+        if (userSidebarName) userSidebarName.innerText = nombreCorto;
+        if (userSidebarInitial) userSidebarInitial.innerText = inicial;
+
+        // Actualizar Saludo Header (Solo si existe en el HTML actual)
+        if (userHeaderGreeting) userHeaderGreeting.innerText = `Bienvenida/o, ${nombreCorto}`;
+        
+        // Actualizar variable global para facturacion
+        USUARIO_ACTUAL = nombreCorto;
     }
 }
 
@@ -426,56 +456,77 @@ async function imprimirFactura(facturaId) {
             <html>
             <head>
                 <title>Factura #${factura.id.substring(0,8)}</title>
+                <script src="https://cdn.tailwindcss.com"></script>
                 <style>
-                    body { font-family: sans-serif; padding: 20px; max-width: 800px; mx-auto; }
-                    .header { text-align: center; margin-bottom: 20px; text-transform: uppercase; }
-                    .info { margin-bottom: 20px; font-size: 12px; color: #555; }
-                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
-                    th { text-align: left; background: #f8f8f8; padding: 8px; font-size: 10px; uppercase; }
-                    .totales { text-align: right; font-weight: bold; font-size: 14px; margin-top: 10px; }
-                    .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #999; }
+                    @media print { .no-print { display: none; } }
+                    body { background: #f8fafc; font-family: 'Inter', sans-serif; }
                 </style>
             </head>
-            <body>
-                <div class="header">
-                    <h2>VITAL CAN</h2>
-                    <p>Comprobante de Venta</p>
-                </div>
-                
-                <div class="info">
-                    <p><strong>Fecha:</strong> ${new Date(factura.created_at).toLocaleString()}</p>
-                    <p><strong>Cliente:</strong> ${factura.cliente_nombre}</p>
-                    <p><strong>Factura N°:</strong> ${factura.id}</p>
-                    <p><strong>Vendedor:</strong> ${factura.usuario || 'Sistema'}</p>
-                </div>
+            <body class="p-10">
+                <div class="max-w-3xl mx-auto bg-white shadow-xl rounded-3xl overflow-hidden border border-slate-100">
+                    <div class="bg-slate-900 p-8 text-white flex justify-between items-center">
+                        <div>
+                            <h1 class="text-5xl font-black italic tracking-tighter">FACTURA</h1>
+                            <p class="text-slate-400 text-sm">Punto de Venta: 00001 | Comp. N°: ${factura.nro_comprobante || '00000452'}</p>
+                        </div>
+                        <div class="text-right">
+                            <h2 class="text-2xl font-bold italic uppercase">Vital Can</h2>
+                            <p class="text-xs text-slate-400 font-bold">CUIT: 27344838890</p>
+                            <p class="text-xs text-slate-400 italic">Responsable Inscripto</p>
+                        </div>
+                    </div>
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th style="text-align: center;">Cant.</th>
-                            <th style="text-align: right;">Unitario</th>
-                            <th style="text-align: right;">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${filas}
-                    </tbody>
-                </table>
+                    <div class="p-8">
+                        <div class="flex justify-between border-b border-slate-100 pb-6 mb-6">
+                            <div>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Receptor</p>
+                                <p class="text-lg font-bold text-slate-800 uppercase italic">${factura.cliente_nombre}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fecha</p>
+                                <p class="font-bold text-slate-800 italic">${new Date(factura.created_at).toLocaleDateString()}</p>
+                            </div>
+                        </div>
 
-                <div class="totales">
-                    <p>Subtotal: $${factura.total_neto.toLocaleString('es-AR')}</p>
-                    <p>IVA (21%): $${factura.iva.toLocaleString('es-AR')}</p>
-                    <p style="font-size: 18px; color: #059669;">TOTAL: $${factura.total_final.toLocaleString('es-AR')}</p>
-                </div>
+                        <table class="w-full mb-8">
+                            <thead>
+                                <tr class="text-[10px] font-black text-slate-400 uppercase border-b">
+                                    <th class="text-left pb-2">Descripción</th>
+                                    <th class="text-center pb-2">Cant.</th>
+                                    <th class="text-right pb-2">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm font-bold italic text-slate-600">
+                                ${detalles.map(d => `
+                                    <tr>
+                                        <td class="py-3 border-b border-slate-50">${d.productos.nombre}</td>
+                                        <td class="py-3 border-b border-slate-50 text-center">${d.cantidad}</td>
+                                        <td class="py-3 border-b border-slate-50 text-right">$${(d.cantidad * (d.productos.precio[0]?.precio_venta || 0)).toLocaleString('es-AR')}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
 
-                <div class="footer">
-                    <p>Gracias por su compra</p>
+                        <div class="flex justify-between items-end">
+                            <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://www.afip.gob.ar/fe/qr/?p=${btoa(JSON.stringify({ver:1,fecha:factura.created_at,cuit:27344838890,puntoVta:1,tipoCmp:1,nroCmp:factura.nro_comprobante,importe:factura.total_final,cae:factura.cae}))}" class="w-20 h-20 shadow-sm">
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase">CAE: <span class="text-slate-900">${factura.cae}</span></p>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase">Vto: <span class="text-slate-900">${factura.cae_vto}</span></p>
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/AFIP_logo.svg/2560px-AFIP_logo.svg.png" class="h-4 mt-2 opacity-50">
+                                </div>
+                            </div>
+
+                            <div class="text-right">
+                                <p class="text-slate-400 text-xs font-bold uppercase italic">Total Final</p>
+                                <p class="text-4xl font-black text-emerald-600 italic tracking-tighter">$${factura.total_final.toLocaleString('es-AR')}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <script>
-                    window.onload = function() { window.print(); }
-                </script>
+                <div class="text-center mt-6 no-print">
+                    <button onclick="window.print()" class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg">Imprimir Comprobante</button>
+                </div>
             </body>
             </html>
         `;
