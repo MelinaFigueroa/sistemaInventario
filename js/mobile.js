@@ -122,18 +122,41 @@ function toggleFlash() {
 function inicializarFABs() {
     if (!isMobile.any()) return;
 
+    // Evitar duplicados
+    if (document.querySelector('.fab-container')) return;
+
     const fabContainer = document.createElement('div');
     fabContainer.className = 'fab-container';
+    // Ocultos por defecto con style="display: none;"
     fabContainer.innerHTML = `
-        <button class="fab-button fab-scan" onclick="accionRapidaScan()" title="Escanear Código">
+        <button id="fab-scan" class="fab-button fab-scan" style="display: none;" onclick="accionRapidaScan()" title="Escanear Código">
             <i class="fas fa-barcode"></i>
         </button>
-        <button class="fab-button fab-add" onclick="accionRapidaAgregar()" title="Agregar Rápido">
+        <button id="fab-add" class="fab-button fab-add" style="display: none;" onclick="accionRapidaAgregar()" title="Agregar Rápido">
             <i class="fas fa-plus"></i>
         </button>
     `;
 
     document.body.appendChild(fabContainer);
+}
+
+function actualizarVisibilidadFABs(vista) {
+    const btnScan = document.getElementById('fab-scan');
+    const btnAdd = document.getElementById('fab-add');
+    if (!btnScan || !btnAdd) return;
+
+    // Resetear a oculto
+    btnScan.style.display = 'none';
+    btnAdd.style.display = 'none';
+
+    // Mostrar según vista
+    if (vista.includes('recepcion') || vista.includes('inventario') || vista.includes('posiciones')) {
+        btnScan.style.display = 'flex';
+    }
+
+    if (vista.includes('pedidos')) {
+        btnAdd.style.display = 'flex';
+    }
 }
 
 function accionRapidaScan() {

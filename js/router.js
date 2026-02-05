@@ -18,9 +18,15 @@ async function loadPage(pageUrl) {
         const doc = parser.parseFromString(content, "text/html");
         container.innerHTML = doc.querySelector("main") ? doc.querySelector("main").innerHTML : content;
 
+
         // Cerrar sidebar automáticamente en móvil al navegar
         if (typeof closeSidebar === 'function') {
             closeSidebar();
+        }
+
+        // Actualizar FABs: Solo mostrar en vistas permitidas
+        if (typeof actualizarVisibilidadFABs === 'function') {
+            actualizarVisibilidadFABs(pageUrl);
         }
 
         // Inicializadores de módulos
