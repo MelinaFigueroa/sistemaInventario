@@ -113,6 +113,13 @@
             <span class="ml-3 font-black uppercase italic tracking-widest text-xs">Ventas / Facturas</span>
           </button>
         </li>
+        <li id="menu-cobranzas">
+          <button onclick="loadPage('cobranzas.html')"
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-all group text-left text-emerald-400">
+            <i class="fas fa-hand-holding-usd w-6 group-hover:scale-110 transition-transform"></i>
+            <span class="ml-3 font-black uppercase italic tracking-widest text-xs">Cobranzas</span>
+          </button>
+        </li>
         <li id="menu-clientes">
           <button onclick="loadPage('clientes.html')"
             class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-all group text-left text-sky-400">
@@ -344,7 +351,7 @@
           <p class="text-center text-slate-400 text-xs italic py-4">No hay productos añadidos aún.</p>
         </div>
 
-        <button onclick="guardarPedidoSupabase()"
+        <button id="btn-confirmar-pedido" onclick="guardarPedidoSupabase()"
           class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black italic uppercase shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">
           Confirmar y Guardar Pedido
         </button>

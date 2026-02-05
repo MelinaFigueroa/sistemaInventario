@@ -1,0 +1,154 @@
+<main class="max-w-5xl mx-auto p-4 md:p-6 animate-fadeIn">
+    <header class="mb-8 flex justify-between items-end">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800 italic uppercase tracking-tighter">Registrar Cobranza</h2>
+            <p class="text-slate-500 font-bold text-sm">Carga de pagos y comprobantes</p>
+        </div>
+        <div class="hidden md:block">
+            <i class="fas fa-hand-holding-usd text-3xl text-emerald-100"></i>
+        </div>
+    </header>
+
+    <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 p-6 md:p-8 border border-slate-50">
+        <form id="form-cobranza" class="space-y-6" onsubmit="prepararEnvioPago(event)">
+            <!-- Selección de Cliente -->
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase italic mb-2 ml-2">Cliente /
+                    Veterinaria</label>
+                <select id="cob-cliente-select" required
+                    class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 outline-none font-bold italic text-slate-700 appearance-none">
+                    <option value="">Cargando clientes...</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Monto -->
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase italic mb-2 ml-2">Monto Cobrado
+                        ($)</label>
+                    <div class="relative">
+                        <span class="absolute left-5 top-1/2 -translate-y-1/2 font-black text-slate-400">$</span>
+                        <input type="number" id="cob-monto" required step="0.01"
+                            class="w-full pl-10 pr-4 py-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 outline-none font-black text-slate-700"
+                            placeholder="0.00">
+                    </div>
+                </div>
+
+                <!-- Método de Pago -->
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase italic mb-2 ml-2">Medio de
+                        Pago</label>
+                    <select id="cob-metodo" required
+                        class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 outline-none font-bold italic text-slate-700">
+                        <option value="transferencia">Transferencia Bancaria</option>
+                        <option value="efectivo">Efectivo</option>
+                        <option value="cheque">Cheque</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Subida de Comprobante (Mobile First) -->
+            <div class="bg-indigo-50/50 p-6 rounded-[2rem] border-2 border-dashed border-indigo-200 relative">
+                <label class="block text-[10px] font-black text-indigo-400 uppercase italic mb-4 text-center">Foto del
+                    Comprobante (Obligatorio)</label>
+
+                <div class="flex flex-col items-center">
+                    <div id="preview-container"
+                        class="hidden mb-4 w-full max-w-[200px] h-48 bg-white rounded-2xl overflow-hidden border-2 border-indigo-500 shadow-lg relative">
+                        <img id="img-preview" src="#" class="w-full h-full object-cover">
+                        <button type="button" onclick="resetFile()"
+                            class="absolute top-2 right-2 bg-rose-500 text-white w-8 h-8 rounded-full shadow-lg">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <label for="cob-foto" class="cursor-pointer group flex flex-col items-center gap-2">
+                        <div
+                            class="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-indigo-500 shadow-md group-hover:scale-110 transition-transform">
+                            <i class="fas fa-camera text-3xl"></i>
+                        </div>
+                        <span class="text-[10px] font-black uppercase text-indigo-600 italic mt-2">Tomar Foto o
+                            Subir</span>
+                        <input type="file" id="cob-foto" accept="image/*" capture="environment" class="hidden"
+                            onchange="mostrarPreview(this)">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Notas -->
+            <div>
+                <label
+                    class="block text-[10px] font-black text-slate-400 uppercase italic mb-2 ml-2">Observaciones</label>
+                <textarea id="cob-observaciones" rows="2"
+                    class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 outline-none font-bold text-slate-700"
+                    placeholder="Ej: Nro de transferencia, Banco..."></textarea>
+            </div>
+
+            <button type="submit" id="btn-registrar-pago"
+                class="w-full bg-emerald-500 text-white py-5 rounded-[2rem] font-black uppercase italic shadow-lg shadow-emerald-100 hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-3">
+                <i class="fas fa-check-circle text-xl"></i>
+                Confirmar Cobranza
+            </button>
+        </form>
+    </div>
+</main>
+
+<script>
+    /**
+     * Lógica de UI para la página de Cobranzas
+     */
+    (async function initCobranzas() {
+        try {
+            // Cargar clientes
+            const { data: clientes } = await _supabase.from('clientes').select('id, nombre').order('nombre');
+            const select = document.getElementById('cob-cliente-select');
+            if (select) {
+                select.innerHTML = '<option value="">Seleccionar Cliente...</option>' +
+                    clientes.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+            }
+        } catch (e) { console.error(e); }
+    })();
+
+    function mostrarPreview(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('img-preview').src = e.target.result;
+                document.getElementById('preview-container').classList.remove('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function resetFile() {
+        document.getElementById('cob-foto').value = '';
+        document.getElementById('preview-container').classList.add('hidden');
+    }
+
+    async function prepararEnvioPago(e) {
+        e.preventDefault();
+
+        const pagoData = {
+            cliente_id: document.getElementById('cob-cliente-select').value,
+            monto: parseFloat(document.getElementById('cob-monto').value),
+            metodo_pago: document.getElementById('cob-metodo').value,
+            notas: document.getElementById('cob-observaciones').value
+        };
+
+        const fileInput = document.getElementById('cob-foto');
+        const archivo = fileInput.files[0];
+
+        if (!archivo) {
+            Swal.fire('¡FALTA COMPROBANTE!', 'Tenés que subir la foto de la transferencia o recibo.', 'error');
+            return;
+        }
+
+        // Llamar a la función del core en finanzas.js
+        if (typeof registrarPago === 'function') {
+            await registrarPago(pagoData, archivo);
+        } else {
+            Notificar.error("ERROR CRÍTICO", "Módulo de finanzas no cargado.");
+        }
+    }
+</script>

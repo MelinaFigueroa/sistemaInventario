@@ -26,7 +26,7 @@ async function abrirModalPedido() {
         // 2. Cargar Clientes
         const { data: clientes, error: errorC } = await _supabase
             .from("clientes")
-            .select("id, nombre, cuit")
+            .select("id, nombre, cuit, estado") // Traemos el estado para el control
             .order("nombre", { ascending: true });
 
         if (errorC) throw errorC;
@@ -34,7 +34,34 @@ async function abrirModalPedido() {
         const selectCli = document.getElementById("ped-cliente-select");
         if (selectCli) {
             selectCli.innerHTML = '<option value="">Seleccioná un cliente...</option>' +
-                clientes.map((c) => `<option value="${c.id}" data-cuit="${c.cuit}">${c.nombre}</option>`).join("");
+                clientes.map((c) => `<option value="${c.id}" data-cuit="${c.cuit}" data-estado="${c.estado}">${c.nombre}</option>`).join("");
+
+            // Listener proactivo para bloqueo de deudores
+            selectCli.onchange = (e) => {
+                const opt = e.target.options[e.target.selectedIndex];
+                const estado = opt.getAttribute('data-estado');
+                const btnGuardar = document.getElementById("btn-confirmar-pedido");
+
+                if (estado === 'deudor') {
+                    if (btnGuardar) {
+                        btnGuardar.disabled = true;
+                        btnGuardar.classList.add('opacity-50', 'cursor-not-allowed', 'bg-slate-400');
+                        btnGuardar.classList.remove('bg-indigo-600');
+                    }
+                    Swal.fire({
+                        title: 'CLIENTE BLOQUEADO',
+                        text: 'Este cliente es DEUDOR. No se pueden cargar pedidos hasta que regularice su situación en Administración.',
+                        icon: 'warning',
+                        confirmButtonColor: '#f43f5e'
+                    });
+                } else {
+                    if (btnGuardar) {
+                        btnGuardar.disabled = false;
+                        btnGuardar.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-400');
+                        btnGuardar.classList.add('bg-indigo-600');
+                    }
+                }
+            };
         }
 
         document.getElementById("modal-pedido").classList.remove("hidden");

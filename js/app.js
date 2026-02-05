@@ -110,8 +110,8 @@ function tienePermiso(idOMenu) {
     // Mapeo unificado: ID de Menú -> Página HTML relacionada
     const permisos = {
         'admin': ['*'], // Comodín para todo
-        'administracion': ['menu-dashboard', 'menu-consulta', 'menu-pedidos', 'menu-facturacion', 'menu-clientes', 'menu-inventario', 'menu-movimientos', 'inicio.html', 'consulta.html', 'pedidos.html', 'facturacion.html', 'clientes.html', 'inventario.html', 'movimientos.html'],
-        'ventas': ['menu-dashboard', 'menu-consulta', 'menu-pedidos', 'menu-clientes', 'menu-inventario', 'inicio.html', 'consulta.html', 'pedidos.html', 'clientes.html', 'inventario.html'],
+        'administracion': ['menu-dashboard', 'menu-consulta', 'menu-pedidos', 'menu-facturacion', 'menu-cobranzas', 'menu-clientes', 'menu-inventario', 'menu-movimientos', 'inicio.html', 'consulta.html', 'pedidos.html', 'facturacion.html', 'cobranzas.html', 'clientes.html', 'inventario.html', 'movimientos.html'],
+        'ventas': ['menu-dashboard', 'menu-consulta', 'menu-pedidos', 'menu-cobranzas', 'menu-clientes', 'menu-inventario', 'inicio.html', 'consulta.html', 'pedidos.html', 'cobranzas.html', 'clientes.html', 'inventario.html'],
         'deposito': ['menu-dashboard', 'menu-consulta', 'menu-pedidos', 'menu-recepcion', 'menu-posiciones', 'menu-inventario', 'menu-movimientos', 'inicio.html', 'consulta.html', 'pedidos.html', 'recepcion.html', 'posiciones.html', 'inventario.html', 'movimientos.html'],
         'invitado': ['menu-dashboard', 'menu-consulta', 'inicio.html', 'consulta.html']
     };

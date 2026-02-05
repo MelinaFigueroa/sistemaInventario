@@ -86,6 +86,7 @@ function actualizarBreadcrumbs(pageUrl) {
         'inicio': 'Dashboard',
         'pedidos': 'Gestión de Pedidos',
         'facturacion': 'Administración > Ventas',
+        'cobranzas': 'Caja > Registrar Cobranza',
         'recepcion': 'Logística > Recepción',
         'posiciones': 'Mapa > Almacenamiento',
         'inventario': 'Stock > Inventario Real',
@@ -110,7 +111,8 @@ function actualizarBreadcrumbs(pageUrl) {
 const scriptsCargados = new Set();
 async function cargarModulosNecesarios(pageUrl) {
     const mapping = {
-        'facturacion.html': ['../js/administracion.js'],
+        'facturacion.html': ['../js/finanzas.js'],
+        'cobranzas.html': ['../js/finanzas.js'],
         'consulta.html': ['../js/consulta.js']
     };
 
