@@ -410,13 +410,23 @@ function pintarClientes(data) {
                 <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
                     <i class="fas fa-store text-xl"></i>
                 </div>
-                <span class="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-1 rounded italic uppercase tracking-widest">Activo</span>
+                <span class="text-[10px] font-black ${c.estado === 'deudor' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'} px-2 py-1 rounded italic uppercase tracking-widest">
+                    ${c.estado || 'Activo'}
+                </span>
             </div>
             <h3 class="font-black text-slate-800 text-lg uppercase italic tracking-tighter leading-tight mb-1">${c.nombre}</h3>
             <p class="text-[10px] text-slate-400 font-bold mb-4 uppercase tracking-widest">CUIT: ${c.cuit}</p>
-            <div class="flex items-center gap-2 text-xs text-slate-500 font-bold italic border-t border-slate-50 pt-4">
-                <i class="fas fa-location-dot text-indigo-400"></i>
-                <span>${c.direccion || 'Sin dirección registrada'}</span>
+            
+            <div class="space-y-3 border-t border-slate-50 pt-4">
+                <div class="flex items-center gap-2 text-xs text-slate-500 font-bold italic">
+                    <i class="fas fa-location-dot text-indigo-400"></i>
+                    <span class="truncate">${c.direccion || 'Sin dirección registrada'}</span>
+                </div>
+                
+                <button onclick="abrirCuentaCorriente('${c.id}')" 
+                    class="w-full mt-2 py-2 bg-slate-50 hover:bg-slate-900 hover:text-white text-slate-600 rounded-xl text-[10px] font-black uppercase italic transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-file-invoice-dollar"></i> Cuenta Corriente
+                </button>
             </div>
         </div>
     `).join("");

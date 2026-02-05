@@ -147,3 +147,169 @@ async function ejecutarAuditoriaGlobalSaldos() {
         console.error("Error auditoría global:", err);
     }
 }
+
+/**
+ * HISTORIAL DE CUENTA CORRIENTE: Cronológico con Saldos Parciales
+ */
+async function obtenerResumenCuentaCorriente(clienteId) {
+    try {
+        const { data: cliente } = await _supabase.from('clientes').select('nombre').eq('id', clienteId).single();
+        if (!cliente) return [];
+
+        // Traer Facturas y Pagos Aprobados
+        const { data: facturas } = await _supabase.from('facturas').select('*').eq('cliente_nombre', cliente.nombre);
+        const { data: pagos } = await _supabase.from('pagos').select('*').eq('cliente_id', clienteId).eq('estado', 'aprobado');
+
+        // Unificar en una lista cronológica
+        let movimientos = [
+            ...facturas.map(f => ({ fecha: f.created_at, desc: `Factura ${f.nro_comprobante || '---'}`, debe: f.total_final, haber: 0, tipo: 'FACTURA' })),
+            ...pagos.map(p => ({ fecha: p.created_at, desc: `Pago (${p.metodo_pago})`, debe: 0, haber: p.monto, tipo: 'PAGO' }))
+        ];
+
+        // Ordenar por fecha
+        movimientos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+        // Calcular saldos parciales
+        let saldoAcumulado = 0;
+        return movimientos.map(m => {
+            saldoAcumulado += (m.debe - m.haber);
+            return { ...m, saldo: saldoAcumulado };
+        });
+    } catch (err) {
+        console.error(err);
+        return [];
+    }
+}
+
+/**
+ * IMPORTADOR DE MOVIMIENTOS BANCARIOS (Conciliación por Monto)
+ */
+async function procesarCSVMovimientosBancarios(csvText) {
+    try {
+        const lineas = csvText.split('\n').filter(l => l.trim().length > 0);
+        let conciliados = 0;
+
+        for (const linea of lineas) {
+            // Ejemplo CSV: Fecha,Descripción,Monto
+            const campos = linea.split(',');
+            const montoCSV = Math.abs(parseFloat(campos[2]));
+
+            if (isNaN(montoCSV)) continue;
+
+            // Buscar pagos pendientes con ese monto exacto
+            const { data: pagosMatch } = await _supabase
+                .from('pagos')
+                .select('id, cliente_id')
+                .eq('estado', 'pendiente')
+                .eq('monto', montoCSV)
+                .limit(1);
+
+            if (pagosMatch && pagosMatch.length > 0) {
+                await aprobarPago(pagosMatch[0].id);
+                conciliados++;
+            }
+        }
+
+        Notificar.exito("CONCILIACIÓN COMPLETADA", `Se aprobaron ${conciliados} pagos automáticamente.`);
+        return conciliados;
+    } catch (err) {
+        console.error(err);
+        Notificar.error("ERROR CSV", "No se pudo procesar el extracto bancario.");
+    }
+}
+
+/**
+ * EXPORTACIÓN LIBRO IVA VENTAS (CSV para Contador)
+ */
+async function exportarLibroIVAVentas(mes, anio) {
+    try {
+        const fechaDesde = new Date(anio, mes - 1, 1).toISOString();
+        const fechaHasta = new Date(anio, mes, 0, 23, 59, 59).toISOString();
+
+        const { data: facturas } = await _supabase
+            .from('facturas')
+            .select('*')
+            .gte('created_at', fechaDesde)
+            .lte('created_at', fechaHasta)
+            .order('created_at');
+
+        if (!facturas || facturas.length === 0) {
+            Notificar.info("SIN DATOS", "No hay ventas registradas en el periodo seleccionado.");
+            return;
+        }
+
+        let csv = "Fecha,Comprobante,Cliente,CUIT,Neto,IVA,Total\n";
+        facturas.forEach(f => {
+            const fecha = new Date(f.created_at).toLocaleDateString('es-AR');
+            csv += `${fecha},${f.nro_comprobante || '---'},${f.cliente_nombre},${f.cliente_cuit || '---'},${f.total_neto},${f.iva},${f.total_final}\n`;
+        });
+
+        // Descarga del archivo
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `LibroIVA_Ventas_${mes}_${anio}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+    } catch (err) {
+        console.error(err);
+        Notificar.error("ERROR EXPORTACIÓN", "No se pudo generar el reporte.");
+    }
+}
+
+/**
+ * UI: VENTANA DE CUENTA CORRIENTE
+ */
+async function abrirCuentaCorriente(clienteId) {
+    Swal.fire({
+        title: 'Cargando Historial...',
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    const movimientos = await obtenerResumenCuentaCorriente(clienteId);
+
+    if (movimientos.length === 0) {
+        Swal.fire('SIN MOVIMIENTOS', 'Este cliente no tiene facturas ni pagos registrados.', 'info');
+        return;
+    }
+
+    const { data: cliente } = await _supabase.from('clientes').select('nombre').eq('id', clienteId).single();
+
+    Swal.fire({
+        title: `CUENTA CORRIENTE: ${cliente.nombre}`,
+        width: '900px',
+        html: `
+            <div class="overflow-x-auto mt-4">
+                <table class="w-full text-left border-collapse text-[10px] font-bold uppercase italic">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-400">
+                            <th class="p-3">Fecha</th>
+                            <th class="p-3">Descripción</th>
+                            <th class="p-3 text-rose-500">Debe (+)</th>
+                            <th class="p-3 text-emerald-500">Haber (-)</th>
+                            <th class="p-3 bg-indigo-50 text-indigo-700">Saldo</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        ${movimientos.map(m => `
+                            <tr>
+                                <td class="p-3 text-slate-400">${new Date(m.fecha).toLocaleDateString()}</td>
+                                <td class="p-3 text-slate-700">${m.desc}</td>
+                                <td class="p-3 text-rose-600">${m.debe > 0 ? formatearMoneda(m.debe) : '-'}</td>
+                                <td class="p-3 text-emerald-600">${m.haber > 0 ? formatearMoneda(m.haber) : '-'}</td>
+                                <td class="p-3 font-black ${m.saldo > 0 ? 'text-rose-700' : 'text-emerald-700'}">${formatearMoneda(m.saldo)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `,
+        confirmButtonText: 'Cerrar',
+        confirmButtonColor: '#4f46e5'
+    });
+}
+

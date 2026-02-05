@@ -127,18 +127,55 @@ function tienePermiso(idOMenu) {
 // ==========================================
 // INICIALIZACIÓN AL CARGAR LA PÁGINA
 // ==========================================
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
     console.log('🚀 HaruwenWMS iniciado correctamente');
 
     // Verificar si estamos en el dashboard
     if (window.location.pathname.includes('dashboard.html')) {
-        checkUser();
+        await checkUser();
+        globalNotificador(); // Carga inicial de avisos
     }
 });
 
 // ==========================================
 // FUNCIONES AUXILIARES GLOBALES
 // ==========================================
+
+/**
+ * Monitor global de notificaciones (Badges)
+ */
+async function globalNotificador() {
+    const rol = window.currentUserRole;
+    if (rol !== 'admin' && rol !== 'administracion') return;
+
+    try {
+        const { count } = await _supabase
+            .from('pagos')
+            .select('id', { count: 'exact' })
+            .eq('estado', 'pendiente');
+
+        // Actualizar Badge en Sidebar (Función definida en dashboard_admin.js o replicada)
+        const menuItem = document.getElementById('menu-cobranzas');
+        if (menuItem) {
+            let badge = menuItem.querySelector('.nav-badge');
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'nav-badge absolute top-1 right-2 w-5 h-5 bg-rose-500 text-white text-[9px] font-black flex items-center justify-center rounded-full border-2 border-slate-900 shadow-lg hidden';
+                menuItem.style.position = 'relative';
+                menuItem.appendChild(badge);
+            }
+            if (count > 0) {
+                badge.innerText = count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+    } catch (e) { console.error("Error en notificador:", e); }
+}
+
+// Ejecutar cada 2 minutos
+setInterval(globalNotificador, 120000);
 
 // Formatear fecha para mostrar en UI
 function formatearFecha(fecha) {

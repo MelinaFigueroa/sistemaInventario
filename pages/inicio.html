@@ -1,64 +1,188 @@
-<main class="max-w-5xl mx-auto p-4 md:p-6 animate-fadeIn text-nowrap">
-    <header class="mb-8">
-        <h2 class="text-2xl font-bold text-slate-800 italic uppercase">Estado del Depósito</h2>
-        <p class="text-slate-500 font-bold">Distribuidora Alimentos - Resumen Vital Can</p>
+<main class="max-w-5xl mx-auto p-4 md:p-6 animate-fadeIn">
+    <header class="mb-8 flex justify-between items-center sm:flex-row flex-col gap-4">
+        <div>
+            <h2 id="dashboard-title" class="text-2xl font-black text-slate-800 italic uppercase tracking-tighter">Panel
+                de Control</h2>
+            <p id="dashboard-subtitle" class="text-slate-500 font-bold">Resumen de operaciones Vital Can</p>
+        </div>
+        <div id="dashboard-date" class="text-right">
+            <p class="text-xs font-black text-indigo-400 uppercase italic tracking-widest" id="current-date">Cargando
+                fecha...</p>
+        </div>
     </header>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div onclick="loadPage('inventario.html')" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 border-b-4 border-b-indigo-500 cursor-pointer hover:bg-slate-50 transition-all group">
+    <!-- KPI Section: Ventas, Cobranzas y Eficiencia (Admin Only) -->
+    <div id="admin-kpis" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 hidden">
+        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 border-b-4 border-b-emerald-500">
             <div class="flex justify-between items-start mb-4">
-                <div class="p-3 bg-indigo-50 rounded-2xl text-indigo-600 group-hover:scale-110 transition-transform">
-                    <i class="fas fa-boxes-stacked text-xl"></i>
+                <div class="p-3 bg-emerald-50 rounded-2xl text-emerald-600">
+                    <i class="fas fa-coins text-xl"></i>
                 </div>
-                <span class="text-[10px] font-black text-emerald-500 uppercase italic">Ver Todo</span>
+                <span class="text-[10px] font-black text-emerald-500 uppercase italic">Hoy</span>
             </div>
-            <p class="text-slate-400 text-xs font-black uppercase tracking-wider italic">Bolsas en Stock</p>
-            <p id="kpi-stock" class="text-4xl font-black text-slate-800 mt-1">...</p>
+            <p class="text-slate-400 text-[10px] font-black uppercase tracking-wider italic">Ventas del Día</p>
+            <p id="kpi-ventas-hoy" class="text-2xl font-black text-slate-800 mt-1">$ 0,00</p>
         </div>
 
-        <div onclick="loadPage('posiciones.html')" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 border-b-4 border-b-amber-500 cursor-pointer hover:bg-slate-50 transition-all group">
+        <div onclick="loadPage('facturacion.html')"
+            class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 border-b-4 border-b-rose-500 cursor-pointer hover:scale-[1.02] transition-all">
             <div class="flex justify-between items-start mb-4">
-                <div class="p-3 bg-amber-50 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform">
-                    <i class="fas fa-triangle-exclamation text-xl"></i>
+                <div class="p-3 bg-rose-50 rounded-2xl text-rose-600 relative">
+                    <i class="fas fa-receipt text-xl"></i>
+                    <span id="badge-cobranzas-kpi"
+                        class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-white hidden">0</span>
                 </div>
-                <span class="text-[10px] font-black text-amber-500 uppercase italic">Revisar</span>
+                <span class="text-[10px] font-black text-rose-500 uppercase italic">Pendientes</span>
             </div>
-            <p class="text-slate-400 text-xs font-black uppercase tracking-wider italic">Stock Crítico</p>
-            <p id="kpi-critico" class="text-4xl font-black text-slate-800 mt-1">...</p>
+            <p class="text-slate-400 text-[10px] font-black uppercase tracking-wider italic">Cobranzas a Validar</p>
+            <p id="kpi-cobranzas-pendientes" class="text-2xl font-black text-slate-800 mt-1">0</p>
         </div>
 
-        <div onclick="loadPage('movimientos.html')" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 border-b-4 border-b-slate-800 cursor-pointer hover:bg-slate-50 transition-all group">
+        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 border-b-4 border-b-indigo-500">
             <div class="flex justify-between items-start mb-4">
-                <div class="p-3 bg-slate-50 rounded-2xl text-slate-600 group-hover:scale-110 transition-transform">
-                    <i class="fas fa-route text-xl"></i>
+                <div class="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
+                    <i class="fas fa-dolly text-xl"></i>
                 </div>
-                <span class="text-[10px] font-black text-slate-400 uppercase italic">Historial</span>
+                <span id="efficiency-percent" class="text-[10px] font-black text-indigo-500 uppercase italic">0%</span>
             </div>
-            <p class="text-slate-400 text-xs font-black uppercase tracking-wider italic">Movs. Realizados</p>
-            <p id="kpi-movs" class="text-4xl font-black text-slate-800 mt-1">...</p>
+            <p class="text-slate-400 text-[10px] font-black uppercase tracking-wider italic">Eficiencia de Depósito</p>
+            <p id="kpi-eficiencia" class="text-2xl font-black text-slate-800 mt-1">0 / 0 <span
+                    class="text-xs text-slate-400 font-bold">Peds.</span></p>
+        </div>
+    </div>
+
+    <!-- Warehouse Section: Stock y Movimientos (Simplified for Depósito) -->
+    <div id="warehouse-kpis" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div onclick="loadPage('inventario.html')"
+            class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center gap-6 cursor-pointer hover:bg-slate-50 transition-all">
+            <div class="w-16 h-16 bg-indigo-50 rounded-3xl flex items-center justify-center text-indigo-600 text-2xl">
+                <i class="fas fa-boxes-stacked"></i>
+            </div>
+            <div>
+                <p class="text-slate-400 text-[10px] font-black uppercase italic">Bolsas en Stock</p>
+                <p id="kpi-total-stock" class="text-3xl font-black text-slate-800">...</p>
+            </div>
+        </div>
+        <div onclick="loadPage('movimientos.html')"
+            class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center gap-6 cursor-pointer hover:bg-slate-50 transition-all">
+            <div class="w-16 h-16 bg-amber-50 rounded-3xl flex items-center justify-center text-amber-600 text-2xl">
+                <i class="fas fa-route"></i>
+            </div>
+            <div>
+                <p class="text-slate-400 text-[10px] font-black uppercase italic">Movimientos Hoy</p>
+                <p id="kpi-movs-hoy" class="text-3xl font-black text-slate-800">0</p>
+            </div>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div class="space-y-4">
-            <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest italic mb-4">Alertas Prioritarias</h3>
-            <div id="contenedor-alertas" class="space-y-3">
-                <p class="text-xs text-slate-400 italic">No hay alertas críticas pendientes.</p>
+        <!-- Dashboard Admin Left: Feed de Pagos y Salud -->
+        <div id="admin-feed" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-50">
+                <h3
+                    class="text-xs font-black text-slate-400 uppercase tracking-widest italic mb-6 flex items-center gap-2">
+                    <i class="fas fa-bolt text-amber-500"></i> Acción Urgente: Cobranzas
+                </h3>
+                <div id="feed-pagos-pendientes" class="space-y-4">
+                    <p class="text-xs text-slate-400 text-center py-4 italic">No hay pagos pendientes de validación.</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-50">
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest italic mb-6">Salud de Cartera
+                    (Clientes)</h3>
+                <div class="flex items-center justify-around h-32">
+                    <div class="text-center">
+                        <p id="chart-activos" class="text-3xl font-black text-emerald-500">0</p>
+                        <p class="text-[9px] font-black uppercase italic text-slate-400">Activos</p>
+                    </div>
+                    <div class="w-px h-16 bg-slate-100"></div>
+                    <div class="text-center">
+                        <p id="chart-deudores" class="text-3xl font-black text-rose-500">0</p>
+                        <p class="text-[9px] font-black uppercase italic text-slate-400">Deudores</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="bg-slate-900 rounded-3xl p-6 text-white shadow-xl shadow-indigo-100">
-            <h3 class="text-sm font-black text-indigo-400 uppercase tracking-widest italic mb-6">Acciones Rápidas</h3>
+        <!-- Dashboard Shared: Stock Crítico y Acciones -->
+        <div class="space-y-6">
+            <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                <h3 class="text-xs font-black text-indigo-400 uppercase tracking-widest italic mb-6">Stock Crítico <span
+                        class="text-white text-[8px] bg-indigo-600 px-2 py-1 rounded-full ml-2">Vital Can</span></h3>
+                <div id="lista-stock-critico" class="space-y-3">
+                    <p class="text-xs text-slate-500 italic">Analizando inventario...</p>
+                </div>
+            </div>
+
             <div class="grid grid-cols-2 gap-4">
-                <button onclick="loadPage('recepcion.html')" class="flex flex-col items-center justify-center p-4 bg-slate-800 rounded-2xl hover:bg-indigo-600 transition-all group border border-slate-700">
-                    <i class="fas fa-truck-ramp-box mb-2 text-xl group-hover:scale-110 transition-transform text-indigo-400"></i>
-                    <span class="text-[10px] font-bold uppercase italic">Recibir Mercadería</span>
+                <button onclick="loadPage('recepcion.html')"
+                    class="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:translate-y-[-4px] transition-all group lg:min-h-[160px] flex flex-col justify-center items-center">
+                    <div
+                        class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <span class="text-[10px] font-black uppercase italic text-slate-800">Recepción</span>
                 </button>
-                <button onclick="loadPage('pedidos.html')" class="flex flex-col items-center justify-center p-4 bg-slate-800 rounded-2xl hover:bg-indigo-600 transition-all group border border-slate-700">
-                    <i class="fas fa-file-invoice mb-2 text-xl group-hover:scale-110 transition-transform text-indigo-400"></i>
-                    <span class="text-[10px] font-bold uppercase italic">Nuevo Pedido</span>
+                <button onclick="loadPage('cobranzas.html')"
+                    class="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:translate-y-[-4px] transition-all group lg:min-h-[160px] flex flex-col justify-center items-center">
+                    <div
+                        class="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-amber-500 group-hover:text-white transition-all">
+                        <i class="fas fa-hand-holding-dollar"></i>
+                    </div>
+                    <span class="text-[10px] font-black uppercase italic text-slate-800">Cobranza</span>
                 </button>
+            </div>
+
+            <!-- Módulo Contable (Admin Only) -->
+            <div id="admin-accounting-card"
+                class="bg-indigo-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden hidden">
+                <h3 class="text-xs font-black text-indigo-400 uppercase tracking-widest italic mb-6">Módulo Contable
+                </h3>
+                <div class="grid grid-cols-1 gap-4">
+                    <button onclick="abrirMenuExportacion()"
+                        class="w-full p-4 bg-white/10 hover:bg-white/20 rounded-2xl border border-white/10 flex items-center justify-between transition-all">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-file-export text-indigo-400"></i>
+                            <span class="text-[10px] font-black uppercase italic">Exportar Libro IVA</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-[10px] opacity-30"></i>
+                    </button>
+                    <button onclick="abrirImportadorBancario()"
+                        class="w-full p-4 bg-white/10 hover:bg-white/20 rounded-2xl border border-white/10 flex items-center justify-between transition-all">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-university text-emerald-400"></i>
+                            <span class="text-[10px] font-black uppercase italic">Conciliación Bancaria</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-[10px] opacity-30"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </main>
+
+<div id="modal-comprobante"
+    class="fixed inset-0 bg-slate-900/80 z-[200] hidden backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-[3rem] overflow-hidden shadow-2xl animate-fadeIn">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <h4 class="font-black italic uppercase text-slate-800 tracking-tighter">Validar Comprobante</h4>
+            <button onclick="cerrarModalComprobante()"
+                class="w-10 h-10 rounded-full hover:bg-slate-200 transition-all text-slate-400">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-4 bg-slate-100">
+            <img id="modal-img-comprobante" src=""
+                class="w-full rounded-2xl border-4 border-white shadow-lg min-h-[300px] object-contain bg-slate-200">
+        </div>
+        <div class="p-8 flex gap-4">
+            <button id="btn-rechazar-pago"
+                class="flex-1 py-4 bg-rose-50 text-rose-500 rounded-2xl font-black uppercase italic text-xs border-2 border-rose-100 hover:bg-rose-500 hover:text-white transition-all">Rechazar</button>
+            <button id="btn-aprobar-pago"
+                class="flex-2 w-full py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase italic text-xs shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition-all">Aprobar
+                Pago</button>
+        </div>
+    </div>
+</div>

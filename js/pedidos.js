@@ -442,18 +442,42 @@ async function finalizarValidation() {
 // PROCESAMIENTO DE PICKING Y FACTURACIÓN (REAL)
 // ==========================================
 async function procesarPicking(pedidoId) {
-    const { isConfirmed } = await Swal.fire({
-        title: '¿Confirmar Salida y Facturar?',
-        text: "Se generará el comprobante legal y se descontará el stock físico.",
-        icon: 'question',
+    const { value: formValues } = await Swal.fire({
+        title: 'FACTURACIÓN Y SALIDA',
+        html: `
+            <div class="space-y-4 py-4 text-left font-bold uppercase italic">
+                <p class="text-[10px] text-slate-500 mb-4 tracking-widest">Confirmá los datos fiscales para generar el comprobante legal.</p>
+                <div>
+                    <label class="text-[9px] text-slate-400">Punto de Venta</label>
+                    <select id="pv-select" class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 mt-1 font-black">
+                        <option value="0001">0001 - Casa Central</option>
+                        <option value="0002">0002 - Preventa Móvil</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[9px] text-slate-400">Tipo de Comprobante</label>
+                    <select id="tipo-fact-select" class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 mt-1 font-black">
+                        <option value="A">Factura A (Responsable Inscripto)</option>
+                        <option value="B" selected>Factura B (Consumidor Final)</option>
+                        <option value="C">Factura C (Monotributo)</option>
+                    </select>
+                </div>
+            </div>
+        `,
+        icon: 'info',
         showCancelButton: true,
+        confirmButtonText: 'SÍ, FACTURAR',
+        cancelButtonText: 'REVISAR',
         confirmButtonColor: '#10b981',
-        cancelButtonColor: '#94a3b8',
-        confirmButtonText: 'SÍ, FINALIZAR',
-        cancelButtonText: 'REVISAR'
+        preConfirm: () => {
+            return {
+                puntoVenta: document.getElementById('pv-select').value,
+                tipo: document.getElementById('tipo-fact-select').value
+            }
+        }
     });
 
-    if (!isConfirmed) return;
+    if (!formValues) return;
 
     Swal.fire({
         title: 'Autorizando con AFIP',
@@ -482,6 +506,8 @@ async function procesarPicking(pedidoId) {
                 pedidoId: pedidoId,
                 total: totalPedido,
                 cliente: pedidoInfo.cliente_nombre || "Consumidor Final",
+                puntoVenta: formValues.puntoVenta,
+                tipo: formValues.tipo
             }
         });
 
@@ -539,6 +565,8 @@ async function procesarPicking(pedidoId) {
             cae: afipData.cae,
             cae_vto: afipData.caeFchVto,
             nro_comprobante: afipData.nroComprobante,
+            punto_venta: formValues.puntoVenta,
+            tipo_comprobante: formValues.tipo
         }]);
 
         await _supabase.from("pedidos").update({ estado: "preparado" }).eq("id", pedidoId);

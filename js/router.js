@@ -111,8 +111,10 @@ function actualizarBreadcrumbs(pageUrl) {
 const scriptsCargados = new Set();
 async function cargarModulosNecesarios(pageUrl) {
     const mapping = {
+        'inicio.html': ['../js/dashboard_admin.js', '../js/finanzas.js'],
         'facturacion.html': ['../js/finanzas.js'],
         'cobranzas.html': ['../js/finanzas.js'],
+        'clientes.html': ['../js/finanzas.js'],
         'consulta.html': ['../js/consulta.js']
     };
 
