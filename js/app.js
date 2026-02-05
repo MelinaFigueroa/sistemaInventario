@@ -1,79 +1,79 @@
-// ==========================================
-// 1. CONFIGURACIÓN Y ESTADO
-// ==========================================
-const _supabase = supabase.createClient(
-    "https://omylruckqvesemrlomed.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9teWxydWNrcXZlc2VtcmxvbWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNDE0MjIsImV4cCI6MjA4NTcxNzQyMn0.uWe09wGzCnYtIXPXTfhE7Z59iNda2YHjcqFBtKmcopU",
-);
+// // ==========================================
+// // 1. CONFIGURACIÓN Y ESTADO
+// // ==========================================
+// const _supabase = supabase.createClient(
+//     "https://omylruckqvesemrlomed.supabase.co",
+//     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9teWxydWNrcXZlc2VtcmxvbWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNDE0MjIsImV4cCI6MjA4NTcxNzQyMn0.uWe09wGzCnYtIXPXTfhE7Z59iNda2YHjcqFBtKmcopU",
+// );
 
-let itemsPedidoTemporal = [];
-let USUARIO_ACTUAL = "Sistema";
+// let itemsPedidoTemporal = [];
+// let USUARIO_ACTUAL = "Sistema";
 
-// ==========================================
-// 2. SISTEMA DE NOTIFICACIONES (SweetAlert2)
-// ==========================================
-const Notificar = {
-    toast(mensaje, icono = 'success') {
-        Swal.fire({
-            text: mensaje,
-            icon: icono,
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            background: '#ffffff',
-            color: '#1e293b'
-        });
-    },
-    error(titulo, mensaje) {
-        Swal.fire({
-            title: titulo,
-            text: mensaje,
-            icon: 'error',
-            confirmButtonColor: '#4f46e5',
-            background: '#ffffff',
-            confirmButtonText: 'ENTENDIDO'
-        });
-    },
-    exito(titulo, mensaje) {
-        Swal.fire({
-            title: titulo,
-            html: mensaje,
-            icon: 'success',
-            confirmButtonColor: '#4f46e5'
-        });
-    }
-};
+// // ==========================================
+// // 2. SISTEMA DE NOTIFICACIONES (SweetAlert2)
+// // ==========================================
+// const Notificar = {
+//     toast(mensaje, icono = 'success') {
+//         Swal.fire({
+//             text: mensaje,
+//             icon: icono,
+//             toast: true,
+//             position: 'top-end',
+//             showConfirmButton: false,
+//             timer: 3000,
+//             timerProgressBar: true,
+//             background: '#ffffff',
+//             color: '#1e293b'
+//         });
+//     },
+//     error(titulo, mensaje) {
+//         Swal.fire({
+//             title: titulo,
+//             text: mensaje,
+//             icon: 'error',
+//             confirmButtonColor: '#4f46e5',
+//             background: '#ffffff',
+//             confirmButtonText: 'ENTENDIDO'
+//         });
+//     },
+//     exito(titulo, mensaje) {
+//         Swal.fire({
+//             title: titulo,
+//             html: mensaje,
+//             icon: 'success',
+//             confirmButtonColor: '#4f46e5'
+//         });
+//     }
+// };
 
-// ==========================================
-// 2. CARGADOR DE PÁGINAS (SPA)
-// ==========================================
-async function loadPage(pageUrl) {
-    const container = document.getElementById("view-container");
-    if (!container) return;
-    container.innerHTML = '<div class="flex justify-center py-20"><i class="fas fa-paw animate-bounce text-4xl text-indigo-500"></i></div>';
+// // ==========================================
+// // 2. CARGADOR DE PÁGINAS (SPA)
+// // ==========================================
+// async function loadPage(pageUrl) {
+//     const container = document.getElementById("view-container");
+//     if (!container) return;
+//     container.innerHTML = '<div class="flex justify-center py-20"><i class="fas fa-paw animate-bounce text-4xl text-indigo-500"></i></div>';
 
-    try {
-        const response = await fetch(pageUrl);
-        const content = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(content, "text/html");
-        container.innerHTML = doc.querySelector("main") ? doc.querySelector("main").innerHTML : content;
+//     try {
+//         const response = await fetch(pageUrl);
+//         const content = await response.text();
+//         const parser = new DOMParser();
+//         const doc = parser.parseFromString(content, "text/html");
+//         container.innerHTML = doc.querySelector("main") ? doc.querySelector("main").innerHTML : content;
 
-        // Disparar renders según página
-        if (pageUrl.includes("posiciones")) renderPosiciones();
-        if (pageUrl.includes("pedidos")) renderPedidos();
-        if (pageUrl.includes("facturacion")) renderFacturacion();
-        if (pageUrl.includes("inicio")) actualizarDashboard();
-        if (pageUrl.includes("movimientos")) renderMovimientos();
-        if (pageUrl.includes("inventario")) renderInventario();
-        if (pageUrl.includes("recepcion")) prepararRecepcion();
+//         // Disparar renders según página
+//         if (pageUrl.includes("posiciones")) renderPosiciones();
+//         if (pageUrl.includes("pedidos")) renderPedidos();
+//         if (pageUrl.includes("facturacion")) renderFacturacion();
+//         if (pageUrl.includes("inicio")) actualizarDashboard();
+//         if (pageUrl.includes("movimientos")) renderMovimientos();
+//         if (pageUrl.includes("inventario")) renderInventario();
+//         if (pageUrl.includes("recepcion")) prepararRecepcion();
 
-    } catch (error) {
-        Notificar.error("ERROR", "No se pudo cargar la página.");
-    }
-}
+//     } catch (error) {
+//         Notificar.error("ERROR", "No se pudo cargar la página.");
+//     }
+// }
 
 // ==========================================
 // 3. FUNCIONES DE RENDERIZADO (SUPABASE)
@@ -851,6 +851,29 @@ async function escanearSKUNuevo() {
     }
 }
 
+async function activarEscaner() {
+    // Creamos un contenedor para la cámara
+    const { value: result } = await Swal.fire({
+        title: 'ESCANEAR CÓDIGO',
+        html: '<div id="reader" style="width: 100%;"></div>',
+        showConfirmButton: false,
+        showCancelButton: true,
+        didOpen: () => {
+            const html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: { width: 250, height: 150 } },
+                (decodedText) => {
+                    // Cuando detecta el código:
+                    document.getElementById('rec-producto').value = buscarProductoPorSKU(decodedText);
+                    html5QrCode.stop();
+                    Swal.close();
+                }
+            );
+        }
+    });
+}
+
 function cerrarModalPedido() {
     document.getElementById("modal-pedido").classList.add("hidden");
 }
@@ -1202,10 +1225,10 @@ async function actualizarNombreArchivo(input) {
     }
         
         // 1. Intentar buscar el Número de Remito (Patrón común: XXX-XXXX)
-        const matchRemito = text.match(/\d{3,4}-\d{4,8}/);
-        if (matchRemito) {
-            document.getElementById('rec-remito').value = matchRemito[0];
-        }
+        const matchRemito = text.match(/[A-Z]*\d+-\d+/i); 
+if (matchRemito) {
+    document.getElementById('rec-remito').value = matchRemito[0].toUpperCase();
+}
 
         // 2. Intentar buscar la Cantidad (Número cerca de palabras como 'unidades' o 'cant')
         const matchCant = text.match(/(?:CANT|CANTIDAD|UNIDADES)[:\s]+(\d+)/i);
