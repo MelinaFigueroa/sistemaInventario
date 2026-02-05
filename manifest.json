@@ -1,0 +1,136 @@
+{
+  "name": "HaruwenWMS - Sistema de Gestión de Inventario",
+  "short_name": "HaruwenWMS",
+  "description": "Sistema de gestión de inventario y logística para Vital Can - Río Grande, TDF",
+  "start_url": "/pages/dashboard.html",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "es-AR",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "logistics"],
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.jpg",
+      "sizes": "540x720",
+      "type": "image/jpeg",
+      "platform": "narrow",
+      "label": "Vista principal del dashboard"
+    },
+    {
+      "src": "/screenshots/scanner.jpg",
+      "sizes": "540x720",
+      "type": "image/jpeg",
+      "platform": "narrow",
+      "label": "Scanner de códigos de barras"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Escanear Código",
+      "short_name": "Escanear",
+      "description": "Abrir scanner de códigos de barras",
+      "url": "/pages/dashboard.html?action=scan",
+      "icons": [
+        {
+          "src": "/icons/shortcut-scan.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Nuevo Pedido",
+      "short_name": "Pedido",
+      "description": "Crear un nuevo pedido",
+      "url": "/pages/dashboard.html?view=pedidos",
+      "icons": [
+        {
+          "src": "/icons/shortcut-pedido.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Recepción",
+      "short_name": "Recepción",
+      "description": "Recibir mercadería",
+      "url": "/pages/dashboard.html?view=recepcion",
+      "icons": [
+        {
+          "src": "/icons/shortcut-recepcion.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "share_target": {
+    "action": "/pages/dashboard.html",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "remito",
+          "accept": ["image/*", "application/pdf"]
+        }
+      ]
+    }
+  }
+}

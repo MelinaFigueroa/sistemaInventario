@@ -4,7 +4,43 @@
 // FUNCIONES DE SIDEBAR Y NAVEGACIÓN
 // ==========================================
 function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("-translate-x-full");
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    const hamburgerBtn = document.getElementById("hamburger-btn");
+
+    const isOpen = !sidebar.classList.contains("-translate-x-full");
+
+    if (isOpen) {
+        closeSidebar();
+    } else {
+        openSidebar();
+    }
+}
+
+function openSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    const hamburgerBtn = document.getElementById("hamburger-btn");
+
+    sidebar.classList.remove("-translate-x-full");
+    if (overlay) overlay.classList.remove("hidden");
+    if (hamburgerBtn) hamburgerBtn.classList.add("opacity-0", "pointer-events-none");
+
+    // Prevenir scroll del body cuando sidebar está abierto
+    document.body.style.overflow = 'hidden';
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    const hamburgerBtn = document.getElementById("hamburger-btn");
+
+    sidebar.classList.add("-translate-x-full");
+    if (overlay) overlay.classList.add("hidden");
+    if (hamburgerBtn) hamburgerBtn.classList.remove("opacity-0", "pointer-events-none");
+
+    // Restaurar scroll del body
+    document.body.style.overflow = '';
 }
 
 // ==========================================

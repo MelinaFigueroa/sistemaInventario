@@ -18,6 +18,11 @@ async function loadPage(pageUrl) {
         const doc = parser.parseFromString(content, "text/html");
         container.innerHTML = doc.querySelector("main") ? doc.querySelector("main").innerHTML : content;
 
+        // Cerrar sidebar automáticamente en móvil al navegar
+        if (typeof closeSidebar === 'function') {
+            closeSidebar();
+        }
+
         // Inicializadores de módulos
         // Disparar renders según página
         if (pageUrl.includes("posiciones")) renderPosiciones();

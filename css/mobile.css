@@ -1,0 +1,450 @@
+/* ==========================================
+   MOBILE-FIRST CSS - HaruwenWMS
+   Optimizaciones específicas para móviles
+   ========================================== */
+
+/* ==========================================
+   SIDEBAR OVERLAY Y MEJORAS
+   ========================================== */
+#sidebar-overlay {
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Mejorar transición del botón hamburguesa */
+#hamburger-btn {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Asegurar que el sidebar tenga transición suave */
+#sidebar {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Prevenir texto seleccionable en sidebar cuando se abre/cierra */
+#sidebar * {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ==========================================
+   PANTALLAS MUY PEQUEÑAS (Z Flip, pantallas < 375px)
+   ========================================== */
+@media (max-width: 375px) {
+
+    /* Ajustar padding general */
+    #main-content {
+        padding: 12px !important;
+    }
+
+    /* Botones más compactos pero táctiles */
+    button {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+
+    /* Reducir tamaño de headers en pantallas pequeñas */
+    h1 {
+        font-size: 1.5rem !important;
+    }
+
+    h2 {
+        font-size: 1.25rem !important;
+    }
+
+    /* FABs más pequeños en pantallas muy chicas */
+    .fab-button {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
+    }
+
+    .fab-container {
+        bottom: 16px;
+        right: 16px;
+        gap: 10px;
+    }
+}
+
+/* ==========================================
+   PREVENCIÓN DE ZOOM EN INPUTS (iOS)
+   ========================================== */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+    font-size: 16px !important;
+    /* Previene zoom automático en iOS */
+}
+
+/* ==========================================
+   ÁREAS TÁCTILES MEJORADAS (min 44x44px)
+   ========================================== */
+@media (max-width: 768px) {
+
+    button,
+    a.button,
+    [role="button"],
+    input[type="submit"] {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 12px 16px;
+    }
+
+    /* Botones del sidebar más táctiles */
+    #sidebar button {
+        padding: 16px 12px !important;
+        font-size: 15px;
+    }
+}
+
+/* ==========================================
+   TABLAS RESPONSIVE (Scroll Horizontal)
+   ========================================== */
+@media (max-width: 768px) {
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -1rem;
+        padding: 0 1rem;
+    }
+
+    table {
+        min-width: 600px;
+        font-size: 13px;
+    }
+
+    table th,
+    table td {
+        padding: 12px 8px !important;
+        white-space: nowrap;
+    }
+}
+
+/* ==========================================
+   MODALES Y DRAWERS FULL SCREEN EN MÓVIL
+   ========================================== */
+@media (max-width: 768px) {
+    #drawer {
+        width: 100% !important;
+    }
+
+    .swal2-popup {
+        width: 95% !important;
+        max-width: 95% !important;
+        margin: 0 !important;
+        padding: 20px !important;
+    }
+
+    .swal2-html-container {
+        margin: 1rem 0 !important;
+    }
+}
+
+/* ==========================================
+   BOTONES DE ACCIÓN FLOTANTES (FAB)
+   ========================================== */
+.fab-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+@media (min-width: 768px) {
+    .fab-container {
+        display: none;
+        /* Solo en móvil */
+    }
+}
+
+.fab-button {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+}
+
+.fab-button:active {
+    transform: scale(0.95);
+}
+
+.fab-button.fab-scan {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.fab-button.fab-add {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+/* ==========================================
+   SCANNER VIEW (Vista de Cámara)
+   ========================================== */
+.scanner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 9999;
+    display: none;
+}
+
+.scanner-overlay.active {
+    display: block;
+}
+
+.scanner-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.scanner-frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    height: 280px;
+    border: 3px solid #10b981;
+    border-radius: 24px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+}
+
+.scanner-controls {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 16px;
+}
+
+.scanner-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.scanner-btn.close {
+    background: #ef4444;
+    color: white;
+}
+
+.scanner-btn.flash {
+    background: #f59e0b;
+    color: white;
+}
+
+/* ==========================================
+   GRIDS MÓVILES (1 columna)
+   ========================================== */
+@media (max-width: 768px) {
+    .grid-mobile-1 {
+        grid-template-columns: 1fr !important;
+    }
+
+    .grid-mobile-2 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* ==========================================
+   HEADER STICKY EN MÓVIL
+   ========================================== */
+@media (max-width: 768px) {
+    .mobile-sticky-header {
+        position: sticky;
+        top: 0;
+        background: #f1f5f9;
+        z-index: 10;
+        padding: 16px;
+        margin: -16px -16px 16px -16px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+}
+
+/* ==========================================
+   BOTTOM NAVIGATION (Opcional)
+   ========================================== */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+    display: none;
+    padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+    z-index: 40;
+}
+
+@media (max-width: 768px) {
+    .bottom-nav {
+        display: flex;
+    }
+
+    #main-content {
+        padding-bottom: calc(64px + env(safe-area-inset-bottom));
+    }
+}
+
+.bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 700;
+    transition: color 0.2s;
+}
+
+.bottom-nav-item.active {
+    color: #4f46e5;
+}
+
+.bottom-nav-item i {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+/* ==========================================
+   PULL TO REFRESH INDICATOR
+   ========================================== */
+.pull-to-refresh {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    transform: translateY(-100%);
+    transition: transform 0.3s;
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 12px;
+}
+
+.pull-to-refresh.visible {
+    transform: translateY(0);
+}
+
+/* ==========================================
+   TECLADO NUMÉRICO GRANDE PARA CANTIDADES
+   ========================================== */
+.mobile-numpad {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-numpad {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .mobile-numpad button {
+        height: 60px;
+        font-size: 24px;
+        font-weight: bold;
+        background: #f1f5f9;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        transition: all 0.15s;
+    }
+
+    .mobile-numpad button:active {
+        background: #e2e8f0;
+        transform: scale(0.95);
+    }
+}
+
+/* ==========================================
+   SAFE AREA (iPhone con notch)
+   ========================================== */
+@supports (padding: env(safe-area-inset-top)) {
+    body {
+        padding-top: env(safe-area-inset-top);
+    }
+
+    #sidebar {
+        padding-top: calc(16px + env(safe-area-inset-top));
+    }
+}
+
+/* ==========================================
+   HAPTIC FEEDBACK VISUAL
+   ========================================== */
+@keyframes pulse-success {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+
+    50% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+}
+
+.haptic-success {
+    animation: pulse-success 0.4s ease-out;
+}
+
+/* ==========================================
+   LANDSCAPE MODE OPTIMIZATIONS
+   ========================================== */
+@media (max-width: 768px) and (orientation: landscape) {
+    .scanner-frame {
+        width: 240px;
+        height: 240px;
+    }
+
+    .scanner-controls {
+        bottom: 20px;
+    }
+
+    .fab-container {
+        bottom: 12px;
+        right: 12px;
+    }
+
+    /* Reducir altura de header en landscape */
+    header {
+        margin-bottom: 0.5rem !important;
+    }
+}
