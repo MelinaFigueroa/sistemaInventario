@@ -36,6 +36,7 @@
   <script src="../js/pedidos.js"></script>
   <script src="../js/recepcion.js"></script>
   <script src="../js/movimientos.js"></script>
+  <script src="../js/clientes.js"></script>
 
   <script>
     // Inicialización al cargar
@@ -103,6 +104,13 @@
             class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left text-rose-300">
             <i class="fas fa-file-invoice-dollar w-6 group-hover:text-rose-400"></i>
             <span class="ml-3 font-bold">Ventas / Facturas</span>
+          </button>
+        </li>
+        <li>
+          <button onclick="loadPage('clientes.html')"
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left">
+            <i class="fas fa-users w-6 group-hover:text-indigo-400"></i>
+            <span class="ml-3 font-bold uppercase italic">Clientes</span>
           </button>
         </li>
         <li>
@@ -284,10 +292,11 @@
       </div>
       <div class="p-8 space-y-6">
         <div>
-          <label class="block text-xs font-black text-slate-400 uppercase italic mb-2">Cliente (Veterinaria / Pet
-            Shop)</label>
-          <input type="text" id="ped-cliente" placeholder="Ej: Veterinaria Reino Salvaje"
+          <label class="block text-xs font-black text-slate-400 uppercase italic mb-2">Cliente / Veterinaria</label>
+          <select id="ped-cliente-select"
             class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold italic text-slate-700">
+            <option value="">Cargando clientes...</option>
+          </select>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">

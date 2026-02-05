@@ -7,30 +7,42 @@ async function abrirModalPedido() {
     itemsPedidoTemporal = [];
     actualizarListaTemporal();
 
-    const inputCliente = document.getElementById("ped-cliente");
-    if (inputCliente) inputCliente.value = "";
-
     try {
-        const { data: prods, error } = await _supabase
+        // 1. Cargar Productos
+        const { data: prods, error: errorP } = await _supabase
             .from("productos")
             .select("id, nombre, sku")
             .order("nombre", { ascending: true });
 
-        if (error) throw error;
+        if (errorP) throw errorP;
 
-        const select = document.getElementById("ped-producto-select");
-        if (select) {
-            select.innerHTML = prods
+        const selectProd = document.getElementById("ped-producto-select");
+        if (selectProd) {
+            selectProd.innerHTML = prods
                 .map((p) => `<option value="${p.id}">${p.nombre} (${p.sku})</option>`)
                 .join("");
         }
 
+        // 2. Cargar Clientes
+        const { data: clientes, error: errorC } = await _supabase
+            .from("clientes")
+            .select("id, nombre, cuit")
+            .order("nombre", { ascending: true });
+
+        if (errorC) throw errorC;
+
+        const selectCli = document.getElementById("ped-cliente-select");
+        if (selectCli) {
+            selectCli.innerHTML = '<option value="">Seleccioná un cliente...</option>' +
+                clientes.map((c) => `<option value="${c.id}" data-cuit="${c.cuit}">${c.nombre}</option>`).join("");
+        }
+
         document.getElementById("modal-pedido").classList.remove("hidden");
-        Notificar.toast("Catálogo cargado", "info");
+        Notificar.toast("Datos cargados", "info");
 
     } catch (e) {
         console.error("Error al abrir modal:", e);
-        Notificar.error("ERROR DE CARGA", "No se pudieron obtener los productos de la base de datos.");
+        Notificar.error("ERROR DE CARGA", "No se pudieron obtener los datos de la base de datos.");
     }
 }
 
@@ -97,10 +109,13 @@ function eliminarItemTemporal(indice) {
 }
 
 async function guardarPedidoSupabase() {
-    const clienteNombre = document.getElementById("ped-cliente")?.value;
+    const selectCli = document.getElementById("ped-cliente-select");
+    const clienteId = selectCli?.value;
+    const clienteNombre = selectCli?.options[selectCli.selectedIndex]?.text;
+    const clienteCuit = selectCli?.options[selectCli.selectedIndex]?.getAttribute('data-cuit') || "0";
 
-    if (!clienteNombre || itemsPedidoTemporal.length === 0) {
-        Notificar.error("DATOS INCOMPLETOS", "Completá el cliente y añadí al menos un producto.");
+    if (!clienteId || itemsPedidoTemporal.length === 0) {
+        Notificar.error("DATOS INCOMPLETOS", "Seleccioná un cliente y añadí al menos un producto.");
         return;
     }
 
@@ -110,6 +125,7 @@ async function guardarPedidoSupabase() {
             .from("pedidos")
             .insert([{
                 cliente_nombre: clienteNombre,
+                cliente_cuit: clienteCuit,
                 estado: "pendiente"
             }])
             .select()
@@ -168,7 +184,7 @@ async function procesarPicking(pedidoId) {
         // 1. Obtener detalles del pedido
         const { data: pedidoInfo, error: errP } = await _supabase
             .from("pedidos")
-            .select(`cliente_nombre, pedido_detalle(cantidad, producto_id, productos(nombre, precios(precio_venta)))`)
+            .select(`cliente_nombre, cliente_cuit, pedido_detalle(cantidad, producto_id, productos(nombre, precios(precio_venta)))`)
             .eq("id", pedidoId)
             .single();
 
@@ -247,6 +263,7 @@ async function procesarPicking(pedidoId) {
         await _supabase.from("facturas").insert([{
             pedido_id: pedidoId,
             cliente_nombre: pedidoInfo.cliente_nombre,
+            cliente_cuit: pedidoInfo.cliente_cuit,
             total_neto: totalPedido,
             iva: totalPedido * 0.21,
             total_final: totalPedido * 1.21,

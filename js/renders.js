@@ -336,3 +336,63 @@ async function renderMovimientos() {
             </tr>`;
     }).join("");
 }
+
+// ==========================================
+// CLIENTES
+// ==========================================
+let cachedClientes = [];
+
+async function renderClientes() {
+    const container = document.getElementById("lista-clientes");
+    if (!container) return;
+
+    const { data, error } = await _supabase
+        .from("clientes")
+        .select("*")
+        .order("nombre", { ascending: true });
+
+    if (error) {
+        container.innerHTML = `<p class="col-span-full text-center text-rose-500 font-bold py-10">Error al cargar clientes</p>`;
+        return;
+    }
+
+    cachedClientes = data;
+    pintarClientes(data);
+}
+
+function filtrarClientes() {
+    const term = document.getElementById("buscar-cliente").value.toLowerCase();
+    const filtrados = cachedClientes.filter(c =>
+        c.nombre.toLowerCase().includes(term) ||
+        c.cuit.toLowerCase().includes(term) ||
+        (c.direccion || "").toLowerCase().includes(term)
+    );
+    pintarClientes(filtrados);
+}
+
+function pintarClientes(data) {
+    const container = document.getElementById("lista-clientes");
+    if (!container) return;
+
+    if (data.length === 0) {
+        container.innerHTML = `<p class="col-span-full text-center text-slate-400 py-10 font-bold italic uppercase">No se encontraron clientes</p>`;
+        return;
+    }
+
+    container.innerHTML = data.map(c => `
+        <div class="bg-white rounded-3xl p-6 border border-slate-100 hover:shadow-lg transition-all group">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                    <i class="fas fa-store text-xl"></i>
+                </div>
+                <span class="text-[10px] font-black bg-emerald-100 text-emerald-700 px-2 py-1 rounded italic uppercase tracking-widest">Activo</span>
+            </div>
+            <h3 class="font-black text-slate-800 text-lg uppercase italic tracking-tighter leading-tight mb-1">${c.nombre}</h3>
+            <p class="text-[10px] text-slate-400 font-bold mb-4 uppercase tracking-widest">CUIT: ${c.cuit}</p>
+            <div class="flex items-center gap-2 text-xs text-slate-500 font-bold italic border-t border-slate-50 pt-4">
+                <i class="fas fa-location-dot text-indigo-400"></i>
+                <span>${c.direccion || 'Sin dirección registrada'}</span>
+            </div>
+        </div>
+    `).join("");
+}

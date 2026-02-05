@@ -34,6 +34,7 @@ async function loadPage(pageUrl) {
         if (pageUrl.includes("posiciones")) renderPosiciones();
         if (pageUrl.includes("pedidos")) renderPedidos();
         if (pageUrl.includes("facturacion")) renderFacturacion();
+        if (pageUrl.includes("clientes")) renderClientes();
         if (pageUrl.includes("inicio")) actualizarDashboard();
         if (pageUrl.includes("movimientos")) renderMovimientos();
         if (pageUrl.includes("inventario")) renderInventario();
