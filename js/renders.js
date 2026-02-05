@@ -95,6 +95,8 @@ async function renderPosiciones() {
 // ==========================================
 // PEDIDOS
 // ==========================================
+let cachedPedidos = [];
+
 async function renderPedidos() {
     const tbody = document.getElementById("lista-pedidos");
     if (!tbody) return;
@@ -103,13 +105,35 @@ async function renderPedidos() {
         .from("pedidos")
         .select("*")
         .order("created_at", { ascending: false });
+
     if (error) return;
+
+    cachedPedidos = data;
+    pintarTablaPedidos(data);
+}
+
+function filtrarPedidos() {
+    const term = document.getElementById("buscar-pedido").value.toLowerCase();
+    const filtrados = cachedPedidos.filter(p => {
+        const id = p.id.toLowerCase();
+        const cliente = (p.cliente_nombre || "").toLowerCase();
+        return id.includes(term) || cliente.includes(term);
+    });
+    pintarTablaPedidos(filtrados);
+}
+
+function pintarTablaPedidos(data) {
+    const tbody = document.getElementById("lista-pedidos");
+    if (!tbody) return;
 
     tbody.innerHTML = data
         .map(
             (p) => `
         <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50">
-            <td class="p-4"><p class="font-black text-slate-800 uppercase">#${p.id.substring(0, 5)}</p></td>
+            <td class="p-4 text-slate-400">
+                <p class="font-black text-slate-800 uppercase">#${p.id.substring(0, 5)}</p>
+                <p class="text-[9px] font-bold uppercase">${new Date(p.created_at).toLocaleDateString()}</p>
+            </td>
             <td class="p-4 text-slate-700 font-bold uppercase italic">${p.cliente_nombre}</td>
             <td class="p-4 text-center">
                 <span class="px-3 py-1 ${p.estado === "pendiente" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"} text-[9px] font-black rounded-full italic uppercase">
@@ -117,7 +141,7 @@ async function renderPedidos() {
                 </span>
             </td>
             <td class="p-4 text-center">
-                <button onclick="procesarPicking('${p.id}')" class="text-indigo-600 hover:text-indigo-800 p-2">
+                <button onclick="procesarPicking('${p.id}')" class="text-indigo-600 hover:text-indigo-800 p-2 text-lg">
                     <i class="fas ${p.estado === "pendiente" ? "fa-box-open" : "fa-check-double"}"></i>
                 </button>
             </td>

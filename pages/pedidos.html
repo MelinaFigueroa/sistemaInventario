@@ -10,6 +10,13 @@
         </button>
     </header>
 
+    <div class="relative mb-6">
+        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input type="text" id="buscar-pedido" oninput="filtrarPedidos()"
+            placeholder="Buscar por cliente o número de pedido..."
+            class="w-full pl-12 pr-4 py-4 rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold italic transition-all bg-white">
+    </div>
+
     <!-- Contenedor con scroll horizontal habilitado para móvil -->
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-x-auto">
         <table class="w-full text-left border-collapse min-w-[600px]"> <!-- min-w para forzar scroll si es necesario -->
