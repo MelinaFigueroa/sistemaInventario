@@ -6,6 +6,32 @@
 /* ==========================================
    SIDEBAR OVERLAY Y MEJORAS
    ========================================== */
+/* Bajar todo el contenido en móvil para que no lo tape el botón hamburguesa */
+@media (max-width: 768px) {
+    #view-container header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        margin-top: 60px !important;
+        /* Espacio para el botón menú */
+    }
+
+    #view-container header>div {
+        width: 100%;
+    }
+
+    /* Botones de acción en header (como Exportar) full width en móvil */
+    #view-container header button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Buscar input también con margen si es necesario */
+    .relative.mb-6 {
+        margin-top: 10px;
+    }
+}
+
 #sidebar-overlay {
     transition: opacity 0.3s ease-in-out;
 }
@@ -48,7 +74,15 @@
     }
 
     h2 {
-        font-size: 1.25rem !important;
+        font-size: 1.1rem !important;
+        /* Más chico para que entre "Historial de Movimientos" */
+        white-space: normal !important;
+        /* Permitir que el texto baje de línea */
+    }
+
+    p {
+        font-size: 0.8rem !important;
+        white-space: normal !important;
     }
 
     /* FABs más pequeños en pantallas muy chicas */
