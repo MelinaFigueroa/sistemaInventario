@@ -129,16 +129,43 @@ async function renderPedidos() {
 // ==========================================
 // FACTURACIÓN
 // ==========================================
+let cachedFacturas = [];
+
 async function renderFacturacion() {
     const tbody = document.getElementById("lista-facturas");
-    const kpiVentas = document.getElementById("total-ventas-dia");
     if (!tbody) return;
 
     const { data, error } = await _supabase
         .from("facturas")
         .select("*")
         .order("created_at", { ascending: false });
+
     if (error) return;
+
+    cachedFacturas = data;
+    pintarTablaFacturacion(data);
+}
+
+function filtrarFacturas() {
+    const term = document.getElementById("buscar-factura").value.toLowerCase();
+    const filtradas = cachedFacturas.filter(f => {
+        const nro = (f.nro_comprobante || f.id).toLowerCase();
+        const cliente = (f.cliente_nombre || "").toLowerCase();
+        const cuit = (f.cliente_cuit || "").toLowerCase();
+        const vendedor = (f.usuario || "").toLowerCase();
+
+        return nro.includes(term) ||
+            cliente.includes(term) ||
+            cuit.includes(term) ||
+            vendedor.includes(term);
+    });
+    pintarTablaFacturacion(filtradas);
+}
+
+function pintarTablaFacturacion(data) {
+    const tbody = document.getElementById("lista-facturas");
+    const kpiVentas = document.getElementById("total-ventas-dia");
+    if (!tbody) return;
 
     let totalDia = 0;
     tbody.innerHTML = data
