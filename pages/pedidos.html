@@ -4,23 +4,30 @@
             <h2 class="text-2xl font-bold text-slate-800 italic uppercase tracking-tighter">Gestión de Pedidos</h2>
             <p class="text-slate-500 font-bold">Distribuidora Vital Can - Preparación de Salidas</p>
         </div>
-        <button onclick="abrirModalPedido()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl shadow-lg font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 uppercase italic text-sm">
+        <button onclick="abrirModalPedido()"
+            class="hidden md:flex bg-indigo-600 text-white px-6 py-3 rounded-xl shadow-lg font-bold hover:bg-indigo-700 transition-all items-center gap-2 uppercase italic text-sm">
             <i class="fas fa-cart-plus"></i> Nuevo Pedido
         </button>
     </header>
 
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-        <table class="w-full text-left border-collapse">
+    <!-- Contenedor con scroll horizontal habilitado para móvil -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[600px]"> <!-- min-w para forzar scroll si es necesario -->
             <thead>
                 <tr class="bg-slate-50 border-b border-slate-100">
-                    <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">ID / Fecha</th>
-                    <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Cliente</th>
-                    <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Estado</th>
-                    <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Acciones</th>
+                    <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">ID
+                        / Fecha</th>
+                    <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                        Cliente</th>
+                    <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                        Estado</th>
+                    <th
+                        class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center whitespace-nowrap">
+                        Acciones</th>
                 </tr>
             </thead>
             <tbody id="lista-pedidos" class="divide-y divide-slate-50 font-bold italic uppercase text-sm">
-                </tbody>
+            </tbody>
         </table>
     </div>
 </main>
