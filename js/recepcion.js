@@ -117,8 +117,8 @@ function activarEscanerRecepcion() {
         if (encontrado) {
             Notificar.toast("Producto identificado!", "success");
             // Dar feedback visual
-            selectProd.classList.add("ring-4", "ring-emerald-500");
-            setTimeout(() => selectProd.classList.remove("ring-4", "ring-emerald-500"), 1500);
+            selectProd.classList.add("ring-4", "ring-indigo-500");
+            setTimeout(() => selectProd.classList.remove("ring-4", "ring-indigo-500"), 1500);
         } else {
             Notificar.error("CÓDIGO NO RECONOCIDO", `No se encontró un producto con SKU: ${codigo}`);
         }
@@ -130,6 +130,36 @@ async function iniciarEscanerCodigoBarras() {
     activarEscanerRecepcion();
 }
 
-function detenerEscaner() {
-    if (typeof cerrarScannerMobile === 'function') cerrarScannerMobile();
+function activarEscanerRack() {
+    if (typeof abrirScannerMobile !== 'function') {
+        Notificar.error("ERROR", "El escáner no está disponible.");
+        return;
+    }
+
+    abrirScannerMobile((codigo) => {
+        const selectDest = document.getElementById("rec-destino");
+        if (!selectDest) return;
+
+        let encontrado = false;
+        // Normalizar código escaneado (quitar espacios, pasar a mayúsculas)
+        const codigoLimpio = codigo.trim().toUpperCase();
+
+        for (let i = 0; i < selectDest.options.length; i++) {
+            const opt = selectDest.options[i];
+            // Buscamos coincidencia exacta por ID de rack
+            if (opt.value === codigoLimpio) {
+                selectDest.selectedIndex = i;
+                encontrado = true;
+                break;
+            }
+        }
+
+        if (encontrado) {
+            Notificar.toast("Ubicación confirmada!", "success");
+            selectDest.classList.add("ring-4", "ring-indigo-500");
+            setTimeout(() => selectDest.classList.remove("ring-4", "ring-indigo-500"), 1500);
+        } else {
+            Notificar.error("RACK NO ENCONTRADO", `No se existe la ubicación: ${codigoLimpio}`);
+        }
+    });
 }

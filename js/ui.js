@@ -118,27 +118,41 @@ async function abrirModalPosicion() {
 
 async function abrirModalProducto() {
     const { value: formValues } = await Swal.fire({
-        title: 'NUEVO PRODUCTO VITAL CAN',
+        title: '<div class="pt-2"><span class="text-lg font-bold uppercase tracking-tight text-slate-700">Nuevo Producto</span></div>',
         html: `
-            <div class="text-left">
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Nombre Comercial</label>
-                <input id="swal-nombre" class="swal2-input !mt-1 !mb-4" placeholder="Ej: Vital Can Adulto 15kg">
+            <div class="text-left space-y-5 px-1 pt-4">
+                <div>
+                    <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Nombre del Producto</label>
+                    <input id="swal-nombre" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-semibold text-slate-700 text-sm transition-all" placeholder="Ej: Balanced Adulto 15kg">
+                </div>
                 
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-2">SKU / Código de Barras</label>
-                <input id="swal-sku" class="swal2-input !mt-1 !mb-4" placeholder="Escaneá con el celu...">
+                <div>
+                    <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">SKU / Código EAN</label>
+                    <div class="flex gap-2">
+                        <input id="swal-sku" class="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-slate-700 text-sm transition-all" placeholder="Escanear...">
+                        <button type="button" onclick="activarEscanerNuevoProducto()" class="bg-indigo-600 text-white w-12 h-12 rounded-xl flex items-center justify-center hover:bg-indigo-700 active:scale-95 transition-all shadow-sm">
+                            <i class="fas fa-barcode text-lg"></i>
+                        </button>
+                    </div>
+                </div>
                 
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Stock Mínimo (Alerta)</label>
-                <input id="swal-minimo" type="number" class="swal2-input !mt-1" placeholder="Ej: 10">
+                <div>
+                    <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Stock Mínimo</label>
+                    <input id="swal-minimo" type="number" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-semibold text-slate-700 text-sm" placeholder="Cantidad mínima">
+                </div>
             </div>
         `,
         focusConfirm: false,
         showCancelButton: true,
-        confirmButtonColor: '#4f46e5',
-        confirmButtonText: 'GUARDAR PRODUCTO',
-        cancelButtonText: 'CANCELAR',
-        background: '#ffffff',
+        confirmButtonText: 'Confirmar Alta',
+        cancelButtonText: 'Volver',
+        customClass: {
+            confirmButton: 'bg-indigo-600 px-8 py-3.5 rounded-xl font-bold uppercase text-xs text-white tracking-widest hover:bg-indigo-700 transition-all shadow-md',
+            cancelButton: 'bg-slate-100 text-slate-500 px-8 py-3.5 rounded-xl font-bold uppercase text-xs tracking-widest ml-3 hover:bg-slate-200 transition-all'
+        },
+        buttonsStyling: false,
         didOpen: () => {
-            document.getElementById('swal-sku').focus();
+            document.getElementById('swal-nombre').focus();
         },
         preConfirm: () => {
             const nombre = document.getElementById('swal-nombre').value;
@@ -146,7 +160,7 @@ async function abrirModalProducto() {
             const minimo = document.getElementById('swal-minimo').value;
 
             if (!nombre || !sku) {
-                Swal.showValidationMessage('¡Nombre y SKU son obligatorios!');
+                Swal.showValidationMessage('Completá nombre y SKU por favor');
                 return false;
             }
             return { nombre, sku, stock_minimo: minimo };
@@ -158,18 +172,33 @@ async function abrirModalProducto() {
             const { error } = await _supabase.from('productos').insert([
                 {
                     nombre: formValues.nombre.toUpperCase(),
-                    sku: formValues.sku.toUpperCase(),
+                    sku: formValues.sku.toLocaleUpperCase(),
                     stock_minimo: parseInt(formValues.stock_minimo) || 5
                 }
             ]);
 
             if (error) throw error;
 
-            Notificar.toast("Producto guardado correctamente");
+            Notificar.toast("Producto agregado al catálogo", "success");
             if (typeof renderInventario === 'function') renderInventario();
+            if (typeof prepararRecepcion === 'function') prepararRecepcion();
         } catch (err) {
-            Notificar.error("ERROR AL GUARDAR", "Es posible que el SKU ya exista en la base de datos.");
+            Notificar.error("Error", "El SKU ya existe o hay un problema de red.");
         }
+    }
+}
+
+// Función auxiliar para escanear desde el modal de nuevo producto
+function activarEscanerNuevoProducto() {
+    if (typeof abrirScannerMobile === 'function') {
+        abrirScannerMobile((codigo) => {
+            const inputSku = document.getElementById('swal-sku');
+            if (inputSku) {
+                inputSku.value = codigo;
+                inputSku.classList.add("ring-4", "ring-indigo-500");
+                setTimeout(() => inputSku.classList.remove("ring-4", "ring-indigo-500"), 1000);
+            }
+        });
     }
 }
 
