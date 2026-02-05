@@ -4,23 +4,25 @@
             <h2 class="text-2xl font-bold text-slate-800 italic uppercase tracking-tighter">Ventas Realizadas</h2>
             <p class="text-slate-500 font-bold">Historial de facturación Vital Can</p>
         </div>
-        <div class="bg-emerald-100 text-emerald-700 px-6 py-3 rounded-2xl font-black text-xl shadow-sm border border-emerald-200">
+        <div
+            class="bg-emerald-100 text-emerald-700 px-6 py-3 rounded-2xl font-black text-xl shadow-sm border border-emerald-200">
             TOTAL HOY: <span id="total-ventas-dia">$0.00</span>
         </div>
     </header>
 
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden font-bold italic uppercase">
-        <table class="w-full text-left border-collapse">
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-x-auto font-bold italic uppercase">
+        <table class="w-full text-left border-collapse min-w-[800px]">
             <thead>
                 <tr class="bg-slate-50 border-b border-slate-100 text-[10px] text-slate-400">
-                    <th class="p-4">Comprobante / Fecha</th>
-                    <th class="p-4">Cliente / CUIT</th> <th class="p-4 text-indigo-500">Vendedor</th> 
-                    <th class="p-4">Total (IVA inc.)</th>
-                    <th class="p-4 text-center">Acciones</th>
+                    <th class="p-4 whitespace-nowrap">Comprobante / Fecha</th>
+                    <th class="p-4 whitespace-nowrap">Cliente / CUIT</th>
+                    <th class="p-4 text-indigo-500 whitespace-nowrap">Vendedor</th>
+                    <th class="p-4 whitespace-nowrap">Total (IVA inc.)</th>
+                    <th class="p-4 text-center whitespace-nowrap">Acciones</th>
                 </tr>
             </thead>
             <tbody id="lista-facturas" class="divide-y divide-slate-50 text-sm">
-                </tbody>
+            </tbody>
         </table>
     </div>
 </main>
