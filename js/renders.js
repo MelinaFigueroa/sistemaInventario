@@ -268,10 +268,11 @@ async function prepararRecepcion() {
     const { data: prods } = await _supabase
         .from("productos")
         .select("id, nombre, sku");
+
     selectProd.innerHTML =
         '<option value="">Seleccioná Vital Can...</option>' +
         prods
-            .map((p) => `<option value="${p.id}">${p.nombre} (${p.sku})</option>`)
+            .map((p) => `<option value="${p.id}" data-sku="${p.sku}">${p.nombre} (${p.sku})</option>`)
             .join("");
 
     const { data: poss } = await _supabase

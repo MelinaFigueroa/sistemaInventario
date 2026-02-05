@@ -39,9 +39,10 @@ function abrirScannerMobile(onScanCallback) {
                 <i class="fas fa-bolt"></i>
             </button>
         </div>
-        <div style="position: absolute; top: 40px; left: 50%; transform: translateX(-50%); background: white; padding: 12px 24px; border-radius: 16px; font-weight: bold; text-align: center;">
-            <i class="fas fa-barcode text-indigo-600 text-2xl mb-2"></i>
-            <p class="text-sm text-slate-800">Enfocá el código de barras</p>
+        <div style="position: absolute; top: 10%; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); padding: 12px 24px; border-radius: 20px; font-weight: bold; text-align: center; z-index: 20; width: 80%; max-width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+            <i class="fas fa-barcode text-indigo-600 text-2xl mb-1"></i>
+            <p class="text-xs text-slate-800 uppercase tracking-wider">Enfocá el código de barras</p>
+            <p class="text-[9px] text-slate-400 font-normal">Mantené el código dentro del recuadro verde</p>
         </div>
     `;
 
@@ -52,15 +53,15 @@ function abrirScannerMobile(onScanCallback) {
         scannerInstance = new Html5Qrcode("scanner-reader");
 
         const config = {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0,
+            fps: 20, // Más FPS para fluidez
+            qrbox: { width: 280, height: 280 }, // Coincide con el CSS
+            disableFlip: true,
             formatsToSupport: [
-                Html5QrcodeSupportedFormats.QR_CODE,
                 Html5QrcodeSupportedFormats.EAN_13,
                 Html5QrcodeSupportedFormats.EAN_8,
                 Html5QrcodeSupportedFormats.CODE_128,
-                Html5QrcodeSupportedFormats.CODE_39
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.QR_CODE
             ]
         };
 
@@ -150,7 +151,7 @@ function actualizarVisibilidadFABs(vista) {
     btnAdd.style.display = 'none';
 
     // Mostrar según vista
-    if (vista.includes('recepcion') || vista.includes('inventario') || vista.includes('posiciones')) {
+    if (vista.includes('inventario') || vista.includes('posiciones')) {
         btnScan.style.display = 'flex';
     }
 
@@ -165,10 +166,23 @@ function accionRapidaScan() {
         const vistActual = detectarVistaActual();
 
         if (vistActual === 'recepcion') {
-            // Llenar campo de SKU
-            const inputSku = document.getElementById('rec-producto');
-            if (inputSku) {
-                inputSku.value = codigoEscaneado;
+            const selectProd = document.getElementById('rec-producto');
+            if (selectProd) {
+                let encontrado = false;
+                for (let i = 0; i < selectProd.options.length; i++) {
+                    if (selectProd.options[i].getAttribute("data-sku") === codigoEscaneado) {
+                        selectProd.selectedIndex = i;
+                        encontrado = true;
+                        break;
+                    }
+                }
+                if (encontrado) {
+                    Notificar.toast("Producto identificado!", "success");
+                    selectProd.classList.add("ring-2", "ring-indigo-500");
+                    setTimeout(() => selectProd.classList.remove("ring-2", "ring-indigo-500"), 1000);
+                } else {
+                    Notificar.error("DESCONOCIDO", `SKU ${codigoEscaneado} no hallado.`);
+                }
             }
         } else if (vistActual === 'pedidos') {
             // Buscar producto por SKU

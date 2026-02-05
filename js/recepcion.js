@@ -90,42 +90,46 @@ async function procesarRemitoPDF() {
 }
 
 // ==========================================
-// ESCANEO DE CÓDIGOS DE BARRAS (html5-qrcode)
+// ESCANEO DE CÓDIGOS DE BARRAS (Integrado con Mobile Scanner)
 // ==========================================
 
-let escanerActivo = null;
-
-async function iniciarEscanerCodigoBarras() {
-    const elementoVideo = document.getElementById("lector-qr");
-    if (!elementoVideo) {
-        Notificar.error("ERROR", "Elemento de cámara no encontrado.");
+function activarEscanerRecepcion() {
+    if (typeof abrirScannerMobile !== 'function') {
+        Notificar.error("ERROR", "El escáner no está disponible.");
         return;
     }
 
-    try {
-        escanerActivo = new Html5Qrcode("lector-qr");
+    abrirScannerMobile((codigo) => {
+        // Buscar el producto por SKU en el select
+        const selectProd = document.getElementById("rec-producto");
+        if (!selectProd) return;
 
-        await escanerActivo.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            (decodedText) => {
-                // Código escaneado exitosamente
-                document.getElementById("rec-producto").value = decodedText;
-                detenerEscaner();
-                Notificar.toast("Código escaneado", "success");
+        let encontrado = false;
+        for (let i = 0; i < selectProd.options.length; i++) {
+            const opt = selectProd.options[i];
+            if (opt.getAttribute("data-sku") === codigo) {
+                selectProd.selectedIndex = i;
+                encontrado = true;
+                break;
             }
-        );
+        }
 
-    } catch (error) {
-        console.error("Error al iniciar escáner:", error);
-        Notificar.error("ERROR DE CÁMARA", "No se pudo acceder a la cámara.");
-    }
+        if (encontrado) {
+            Notificar.toast("Producto identificado!", "success");
+            // Dar feedback visual
+            selectProd.classList.add("ring-4", "ring-emerald-500");
+            setTimeout(() => selectProd.classList.remove("ring-4", "ring-emerald-500"), 1500);
+        } else {
+            Notificar.error("CÓDIGO NO RECONOCIDO", `No se encontró un producto con SKU: ${codigo}`);
+        }
+    });
+}
+
+// Estos se mantienen por compatibilidad o se pueden remover si se unifica todo en mobile.js
+async function iniciarEscanerCodigoBarras() {
+    activarEscanerRecepcion();
 }
 
 function detenerEscaner() {
-    if (escanerActivo) {
-        escanerActivo.stop().then(() => {
-            escanerActivo = null;
-        });
-    }
+    if (typeof cerrarScannerMobile === 'function') cerrarScannerMobile();
 }
