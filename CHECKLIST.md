@@ -23,6 +23,7 @@
 - [ ] Inventario lista productos
 - [ ] Movimientos muestra trazabilidad
 - [ ] Recepción permite entrada de stock
+- [ ] Consulta avanzada de producto implementada ✅
 
 ### Notificaciones
 - [ ] SweetAlert2 funciona (toasts y modales)

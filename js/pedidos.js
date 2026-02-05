@@ -120,10 +120,28 @@ async function guardarPedidoSupabase() {
     }
 
     try {
+        // 0. Validación de Crédito (Seguridad Financiera)
+        const { data: cliente, error: errC } = await _supabase
+            .from("clientes")
+            .select("estado")
+            .eq("id", clienteId)
+            .single();
+
+        if (cliente?.estado === "deudor") {
+            Swal.fire({
+                title: 'CLIENTE DEUDOR BLOQUEADO',
+                text: 'Este cliente tiene facturas impagas y no puede generar nuevos pedidos.',
+                icon: 'error',
+                confirmButtonColor: '#f43f5e'
+            });
+            return;
+        }
+
         // 1. Insertar el pedido
         const { data: pedido, error: errorPedido } = await _supabase
             .from("pedidos")
             .insert([{
+                cliente_id: clienteId, // Link real para integridad
                 cliente_nombre: clienteNombre,
                 cliente_cuit: clienteCuit,
                 estado: "pendiente"
@@ -159,29 +177,265 @@ async function guardarPedidoSupabase() {
 // ==========================================
 // PROCESAMIENTO DE PICKING Y FACTURACIÓN
 // ==========================================
+// ==========================================
+// LOGÍSTICA: PICKING Y HOJA DE RUTA (FEFO)
+// ==========================================
+async function generarHojaDeRuta(pedidoId) {
+    try {
+        Swal.fire({
+            title: 'Calculando ruta óptima...',
+            text: 'Buscando lotes por vencimiento (FEFO)',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        // 1. Obtener ítems del pedido
+        const { data: detalles, error: errD } = await _supabase
+            .from("pedido_detalle")
+            .select(`
+                cantidad,
+                producto_id,
+                productos ( nombre, sku )
+            `)
+            .eq("pedido_id", pedidoId);
+
+        if (errD) throw errD;
+
+        let hojaDeRuta = [];
+
+        // 2. Para cada ítem, buscar la mejor posición (FEFO)
+        for (const item of detalles) {
+            // Buscamos lotes de este producto ordenados por vencimiento (el que vence primero arriba)
+            const { data: lotesDisponibles, error: errL } = await _supabase
+                .from("lotes")
+                .select(`
+                    id,
+                    numero_lote,
+                    vencimiento,
+                    cantidad_actual,
+                    posicion_id,
+                    posiciones ( id )
+                `)
+                .eq("producto_id", item.producto_id)
+                .gt("cantidad_actual", 0)
+                .order("vencimiento", { ascending: true });
+
+            if (errL) throw errL;
+
+            let cantidadRestante = item.cantidad;
+
+            for (const lote of lotesDisponibles) {
+                if (cantidadRestante <= 0) break;
+
+                const cantidadAPickear = Math.min(lote.cantidad_actual, cantidadRestante);
+
+                hojaDeRuta.push({
+                    rack: lote.posicion_id,
+                    producto: item.productos.nombre,
+                    sku: item.productos.sku,
+                    cantidad: cantidadAPickear,
+                    lote: lote.numero_lote,
+                    vencimiento: lote.vencimiento
+                });
+
+                cantidadRestante -= cantidadAPickear;
+            }
+
+            if (cantidadRestante > 0) {
+                Notificar.error("STOCK INSUFICIENTE", `No hay suficiente stock FEFO para ${item.productos.nombre}`);
+            }
+        }
+
+        // 3. Ordenar ruta lógicamente por nombre de Rack (A1, A2, B1...)
+        hojaDeRuta.sort((a, b) => a.rack.localeCompare(b.rack));
+
+        Swal.close();
+
+        // 4. Mostrar Hoja de Ruta al operario
+        const htmlRuta = `
+            <div class="text-left space-y-4 max-h-[60vh] overflow-y-auto">
+                ${hojaDeRuta.map(r => `
+                    <div class="p-4 bg-slate-50 border-l-4 border-indigo-500 rounded-r-2xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="bg-indigo-600 text-white px-3 py-1 rounded-full font-black text-xs italic uppercase tracking-tighter">
+                                RACK: ${r.rack}
+                            </span>
+                            <span class="text-[10px] font-bold text-rose-500 uppercase italic">Vence: ${formatearFecha(r.vencimiento)}</span>
+                        </div>
+                        <p class="font-black text-slate-800 uppercase italic leading-tight">${r.producto}</p>
+                        <div class="flex justify-between items-center mt-2 border-t border-slate-200 pt-2">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase">Lote: ${r.lote}</span>
+                            <span class="text-xl font-black text-indigo-700 italic">${r.cantidad} <small class="text-[10px]">u.</small></span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            <button onclick="Swal.close(); abrirValidadorPedido('${pedidoId}')" 
+                class="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black mt-6 shadow-lg shadow-emerald-100 uppercase italic flex items-center justify-center gap-2">
+                <i class="fas fa-barcode"></i> EMPEZAR VALIDACIÓN
+            </button>
+        `;
+
+        Swal.fire({
+            title: 'RUTA DE PICKING (FEFO)',
+            html: htmlRuta,
+            showConfirmButton: false,
+            width: '95%',
+            customClass: {
+                popup: 'rounded-3xl'
+            }
+        });
+
+    } catch (e) {
+        console.error("Error generando hoja de ruta:", e);
+        Swal.close();
+        Notificar.error("ERROR", "No se pudo generar la hoja de ruta.");
+    }
+}
+
+// ==========================================
+// VALIDACIÓN POR CÁMARA (CHECKLIST)
+// ==========================================
+let validacionActual = {
+    pedidoId: null,
+    itemsRestantes: [],
+    itemsEscaneados: []
+};
+
+async function abrirValidadorPedido(pedidoId) {
+    try {
+        const { data: detalles, error } = await _supabase
+            .from("pedido_detalle")
+            .select(`cantidad, productos(nombre, sku)`)
+            .eq("pedido_id", pedidoId);
+
+        if (error) throw error;
+
+        validacionActual = {
+            pedidoId: pedidoId,
+            itemsRestantes: detalles.map(d => ({ ...d, escaneados: 0 })),
+            itemsEscaneados: []
+        };
+
+        renderizarValidador();
+
+    } catch (e) {
+        console.error(e);
+        Notificar.error("ERROR", "No se pudo iniciar la validación.");
+    }
+}
+
+function renderizarValidador() {
+    const totalItems = validacionActual.itemsRestantes.reduce((acc, i) => acc + i.cantidad, 0);
+    const escaneadosCount = validacionActual.itemsEscaneados.length;
+    const progreso = (escaneadosCount / totalItems) * 100;
+
+    Swal.fire({
+        title: 'VALIDACIÓN DE PEDIDO',
+        html: `
+            <div class="text-left">
+                <div class="mb-4 bg-slate-100 rounded-2xl p-4 overflow-hidden relative">
+                    <div class="h-2 bg-indigo-200 absolute bottom-0 left-0 transition-all duration-500" style="width: ${progreso}%"></div>
+                    <div class="flex justify-between items-center relative">
+                        <span class="text-[10px] font-black uppercase text-slate-500 italic">Progreso de Picking</span>
+                        <span class="text-xl font-black text-indigo-600 italic">${escaneadosCount}/${totalItems}</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2 mb-6 max-h-[40vh] overflow-y-auto" id="checklist-picking">
+                    ${validacionActual.itemsRestantes.map(item => `
+                        <div class="flex justify-between items-center p-3 rounded-xl border-2 ${item.escaneados >= item.cantidad ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-100'}">
+                            <div class="min-w-0">
+                                <p class="text-xs font-black text-slate-800 uppercase italic truncate">${item.productos.nombre}</p>
+                                <p class="text-[9px] font-bold text-slate-400">SKU: ${item.productos.sku}</p>
+                            </div>
+                            <div class="text-right flex-shrink-0 ml-4">
+                                <span class="font-black ${item.escaneados >= item.cantidad ? 'text-emerald-600' : 'text-slate-400'} italic">
+                                    ${item.escaneados}/${item.cantidad}
+                                </span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="cerrarValidador()" class="bg-slate-200 text-slate-600 py-4 rounded-2xl font-black uppercase italic text-xs">Cancelar</button>
+                    <button onclick="escanearProductoPicking()" class="bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase italic text-xs flex items-center justify-center gap-2">
+                        <i class="fas fa-camera"></i> ESCANEAR
+                    </button>
+                </div>
+
+                ${escaneadosCount >= totalItems ? `
+                    <button onclick="finalizarValidation()" class="w-full bg-emerald-500 text-white py-5 rounded-2xl font-black uppercase italic mt-4 shadow-xl shadow-emerald-100 animate-pulse">
+                        <i class="fas fa-check-circle"></i> TODO VALIDADO - FACTURAR
+                    </button>
+                ` : ''}
+            </div>
+        `,
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        width: '95%'
+    });
+}
+
+function escanearProductoPicking() {
+    if (typeof abrirScannerMobile !== 'function') return;
+
+    abrirScannerMobile((skuEscaneado) => {
+        const itemIndex = validacionActual.itemsRestantes.findIndex(i => i.productos.sku === skuEscaneado && i.escaneados < i.cantidad);
+
+        if (itemIndex !== -1) {
+            validacionActual.itemsRestantes[itemIndex].escaneados++;
+            validacionActual.itemsEscaneados.push(skuEscaneado);
+            Notificar.toast("Producto validado correctamente", "success");
+            renderizarValidador();
+        } else {
+            const pertenece = validacionActual.itemsRestantes.find(i => i.productos.sku === skuEscaneado);
+            if (pertenece) {
+                Notificar.error("CANTIDAD EXCEDIDA", "Ya escaneaste todas las unidades de este producto.");
+            } else {
+                Notificar.error("¡ALERTA ROJA!", `El SKU ${skuEscaneado} no pertenece a este pedido.`);
+            }
+            renderizarValidador();
+        }
+    });
+}
+
+function cerrarValidador() {
+    Swal.close();
+}
+
+async function finalizarValidation() {
+    const pedidoId = validacionActual.pedidoId;
+    cerrarValidador();
+    procesarPicking(pedidoId);
+}
+
+// ==========================================
+// PROCESAMIENTO DE PICKING Y FACTURACIÓN (REAL)
+// ==========================================
 async function procesarPicking(pedidoId) {
     const { isConfirmed } = await Swal.fire({
-        title: '¿Procesar Salida?',
-        text: "Se generará la factura en AFIP y se descontará el stock.",
+        title: '¿Confirmar Salida y Facturar?',
+        text: "Se generará el comprobante legal y se descontará el stock físico.",
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#4f46e5',
+        confirmButtonColor: '#10b981',
         cancelButtonColor: '#94a3b8',
-        confirmButtonText: 'SÍ, PROCESAR',
-        cancelButtonText: 'CANCELAR'
+        confirmButtonText: 'SÍ, FINALIZAR',
+        cancelButtonText: 'REVISAR'
     });
 
     if (!isConfirmed) return;
 
     Swal.fire({
         title: 'Autorizando con AFIP',
-        text: 'Esto puede demorar unos segundos...',
+        text: 'Generando CAE y descontando stock...',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
     });
 
     try {
-        // 1. Obtener detalles del pedido
         const { data: pedidoInfo, error: errP } = await _supabase
             .from("pedidos")
             .select(`cliente_nombre, cliente_cuit, pedido_detalle(cantidad, producto_id, productos(nombre, precios(precio_venta)))`)
@@ -190,35 +444,12 @@ async function procesarPicking(pedidoId) {
 
         if (errP) throw new Error("No se pudo obtener la info del pedido");
 
-        // 2. Validar stock disponible
-        for (const item of pedidoInfo.pedido_detalle) {
-            const { data: stockDisponible } = await _supabase
-                .from("posiciones")
-                .select("cantidad")
-                .eq("producto_id", item.producto_id)
-                .gt("cantidad", 0);
-
-            const totalReal = stockDisponible?.reduce((acc, curr) => acc + curr.cantidad, 0) || 0;
-
-            if (totalReal < item.cantidad) {
-                Swal.close();
-                Notificar.error('STOCK INSUFICIENTE',
-                    `Producto: ${item.productos.nombre}\nNecesitás: ${item.cantidad} u.\nDisponible: ${totalReal} u.`);
-                return;
-            }
-        }
-
-        // 3. Calcular total del pedido
-        const detalles = pedidoInfo.pedido_detalle;
         let totalPedido = 0;
-        detalles.forEach((d) => {
+        pedidoInfo.pedido_detalle.forEach((d) => {
             const precio = d.productos?.precios?.[0]?.precio_venta || 0;
             totalPedido += d.cantidad * precio;
         });
 
-        if (totalPedido <= 0) totalPedido = 100;
-
-        // 4. Invocar AFIP
         const { data: afipData, error: afipError } = await _supabase.functions.invoke("afip-invoice", {
             body: {
                 pedidoId: pedidoId,
@@ -231,35 +462,45 @@ async function procesarPicking(pedidoId) {
             throw new Error(afipData?.error || "AFIP no respondió correctamente");
         }
 
-        // 5. Procesar Stock y Movimientos
-        for (const item of detalles) {
-            const { data: pos } = await _supabase
-                .from("posiciones")
-                .select("id, cantidad")
+        for (const item of pedidoInfo.pedido_detalle) {
+            let cantPendiente = item.cantidad;
+            const { data: lotes } = await _supabase
+                .from("lotes")
+                .select("id, cantidad_actual, posicion_id")
                 .eq("producto_id", item.producto_id)
-                .gt("cantidad", 0)
-                .limit(1).single();
+                .gt("cantidad_actual", 0)
+                .order("vencimiento", { ascending: true });
 
-            if (pos) {
-                const nuevaCant = pos.cantidad - item.cantidad;
+            for (const lote of lotes) {
+                if (cantPendiente <= 0) break;
+                const cantADescontar = Math.min(lote.cantidad_actual, cantPendiente);
+
+                await _supabase.from("lotes").update({
+                    cantidad_actual: lote.cantidad_actual - cantADescontar
+                }).eq("id", lote.id);
+
+                const { data: pos } = await _supabase.from("posiciones").select("cantidad").eq("id", lote.posicion_id).single();
+                const nuevaCantPos = pos.cantidad - cantADescontar;
+
                 await _supabase.from("posiciones").update({
-                    cantidad: nuevaCant,
-                    estado: nuevaCant <= 0 ? "vacio" : "ocupado",
-                    producto_id: nuevaCant <= 0 ? null : item.producto_id,
-                }).eq("id", pos.id);
+                    cantidad: nuevaCantPos,
+                    estado: nuevaCantPos <= 0 ? "vacio" : "ocupado",
+                    producto_id: nuevaCantPos <= 0 ? null : item.producto_id,
+                }).eq("id", lote.posicion_id);
 
                 await _supabase.from("movimientos").insert([{
                     producto_id: item.producto_id,
                     tipo: "SALIDA",
-                    origen: pos.id,
+                    origen: lote.posicion_id,
                     destino: "Venta (CAE " + afipData.cae + ")",
-                    cantidad: item.cantidad,
+                    cantidad: cantADescontar,
                     usuario: USUARIO_ACTUAL,
                 }]);
+
+                cantPendiente -= cantADescontar;
             }
         }
 
-        // 6. Guardar Factura
         await _supabase.from("facturas").insert([{
             pedido_id: pedidoId,
             cliente_nombre: pedidoInfo.cliente_nombre,
@@ -273,16 +514,12 @@ async function procesarPicking(pedidoId) {
             nro_comprobante: afipData.nroComprobante,
         }]);
 
-        // 7. Actualizar estado del Pedido
-        await _supabase.from("pedidos")
-            .update({ estado: "preparado" })
-            .eq("id", pedidoId);
+        await _supabase.from("pedidos").update({ estado: "preparado" }).eq("id", pedidoId);
 
-        // 8. Éxito
         Swal.close();
         await Swal.fire({
-            title: '¡FACTURA GENERADA!',
-            html: `Se autorizó el CAE <b>${afipData.cae}</b> con éxito.<br>El stock ha sido descontado.`,
+            title: '¡DESPACHO EXITOSO!',
+            html: `CAE: <b>${afipData.cae}</b><br>Pedido finalizado y stock actualizado.`,
             icon: 'success',
             confirmButtonColor: '#4f46e5'
         });
@@ -293,7 +530,7 @@ async function procesarPicking(pedidoId) {
     } catch (e) {
         console.error(e);
         Swal.close();
-        Notificar.error('ERROR EN EL PROCESO', e.message);
+        Notificar.error('ERROR EN FACTURACIÓN', e.message);
     }
 }
 

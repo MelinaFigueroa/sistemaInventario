@@ -165,7 +165,13 @@ function accionRapidaScan() {
         // Buscar en qué vista estamos
         const vistActual = detectarVistaActual();
 
-        if (vistActual === 'recepcion') {
+        if (vistActual === 'consulta') {
+            const inputConsulta = document.getElementById("input-consulta");
+            if (inputConsulta) {
+                inputConsulta.value = codigoEscaneado;
+                consultarProducto(codigoEscaneado);
+            }
+        } else if (vistActual === 'recepcion') {
             const selectProd = document.getElementById('rec-producto');
             if (selectProd) {
                 let encontrado = false;
@@ -215,6 +221,7 @@ function detectarVistaActual() {
 
     const html = container.innerHTML.toLowerCase();
 
+    if (html.includes('consulta de producto') || html.includes('input-consulta')) return 'consulta';
     if (html.includes('recepción') || html.includes('rec-producto')) return 'recepcion';
     if (html.includes('pedido') || html.includes('ped-cliente')) return 'pedidos';
     if (html.includes('inventario') || html.includes('lista-productos')) return 'inventario';

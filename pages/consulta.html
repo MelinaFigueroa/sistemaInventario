@@ -1,0 +1,108 @@
+<main class="max-w-5xl mx-auto p-4 md:p-6 animate-fadeIn">
+    <header class="mb-8 flex justify-between items-end">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800 italic uppercase tracking-tighter">Consulta de Producto</h2>
+            <p class="text-slate-500 font-bold text-sm">Información detallada de stock y ubicaciones</p>
+        </div>
+        <div class="hidden md:block">
+            <i class="fas fa-search text-3xl text-indigo-100"></i>
+        </div>
+    </header>
+
+    <!-- Buscador Principal -->
+    <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 p-6 mb-8 border border-slate-50">
+        <label class="block text-[10px] font-black text-slate-400 uppercase italic mb-3 ml-2 tracking-widest">Ingresá
+            SKU o Escaneá el Código</label>
+        <div class="flex gap-3">
+            <div class="relative flex-1">
+                <i class="fas fa-barcode absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="input-consulta" placeholder="ESCANEAR O ESCRIBIR..."
+                    class="w-full pl-14 pr-4 py-5 bg-slate-50 rounded-3xl border-2 border-transparent focus:border-indigo-500 outline-none font-black text-slate-700 uppercase italic tracking-wider transition-all shadow-inner"
+                    onkeyup="if(event.key === 'Enter') consultarProducto()">
+            </div>
+            <button onclick="activarEscanerConsulta()"
+                class="bg-indigo-600 text-white w-20 h-20 rounded-3xl flex items-center justify-center shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all">
+                <i class="fas fa-barcode text-3xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div id="resultado-consulta" class="hidden space-y-6 animate-fadeIn">
+        <!-- Card Encabezado -->
+        <div
+            class="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-100 relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 opacity-10 rotate-12">
+                <i class="fas fa-box-open text-[150px]"></i>
+            </div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-4">
+                    <span
+                        class="px-3 py-1 bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest">HaruwenWMS</span>
+                    <span id="consulta-sku"
+                        class="font-mono text-indigo-100 text-sm font-bold tracking-widest">#SKU-XXXXXX</span>
+                </div>
+                <h3 id="consulta-nombre"
+                    class="text-3xl font-black uppercase italic tracking-tighter leading-none mb-2">NOMBRE DEL PRODUCTO
+                </h3>
+                <p class="text-indigo-200 font-bold italic uppercase text-xs">Vital Can - Alimento Balanceado</p>
+            </div>
+        </div>
+
+        <!-- Grilla de Información -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Stock Total -->
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Stock Vital Can (Total)
+                </p>
+                <div class="flex items-end gap-2">
+                    <span id="consulta-stock-total" class="text-6xl font-black text-slate-800 tracking-tighter">0</span>
+                    <span class="text-lg font-black text-slate-400 uppercase italic mb-2">Unidades</span>
+                </div>
+                <div id="status-stock"
+                    class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase italic">
+                    <i class="fas fa-check-circle"></i> Stock Saludable
+                </div>
+            </div>
+
+            <!-- Lotes y Vencimientos -->
+            <div class="bg-slate-900 p-8 rounded-[2.5rem] shadow-xl text-white">
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Lotes y Vencimientos</p>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                        <div>
+                            <p class="text-xs font-bold text-indigo-400 italic">VENCIMIENTO PRÓXIMO</p>
+                            <p class="text-lg font-black">-- / -- / --</p>
+                        </div>
+                        <i class="fas fa-calendar-times text-2xl text-rose-500 animate-pulse"></i>
+                    </div>
+                    <p class="text-[10px] text-slate-400 uppercase italic">Próximamente: Trazabilidad por lotes.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ubicaciones Detalladas -->
+        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+            <div class="p-6 border-b border-slate-50 flex justify-between items-center">
+                <h4 class="font-black text-slate-800 uppercase italic text-sm tracking-widest">Ubicaciones en Depósito
+                </h4>
+                <span
+                    class="bg-slate-100 text-slate-500 text-[10px] px-3 py-1 rounded-full font-black uppercase">Filtro:
+                    Río Grande</span>
+            </div>
+            <div id="consulta-posiciones" class="p-4 space-y-3">
+                <!-- Se cargan dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Estado Vacío -->
+    <div id="consulta-vacia" class="py-20 text-center">
+        <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <i class="fas fa-search-dollar text-4xl text-slate-200"></i>
+        </div>
+        <h4 class="font-black text-slate-400 uppercase tracking-widest italic">Esperando Búsqueda...</h4>
+        <p class="text-slate-300 text-xs font-bold px-10">Ingresá un código para ver el desglose completo de stock y
+            posiciones.</p>
+    </div>
+</main>

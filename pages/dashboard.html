@@ -39,10 +39,10 @@
   <script src="../js/clientes.js"></script>
 
   <script>
-    // Inicialización al cargar
-    window.onload = () => {
-      checkUser(); // Verificamos sesión
-      loadPage('inicio.html'); // Cargamos vista de inicio
+    // Inicialización Síncrona de Seguridad
+    window.onload = async () => {
+      await checkUser(); // Verificamos sesión y cargamos Rol
+      loadPage('inicio.html'); // Cargamos vista inicial
     };
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -76,8 +76,8 @@
 
 <body class="bg-slate-100 min-h-screen">
   <aside id="sidebar"
-    class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full md:translate-x-0 bg-slate-900 text-slate-300">
-    <div class="h-full px-3 py-4 overflow-y-auto flex flex-col">
+    class="fixed top-0 left-0 z-40 w-64 h-screen overflow-y-auto transition-transform -translate-x-full md:translate-x-0 bg-slate-900 text-slate-300">
+    <div class="px-3 py-4 flex flex-col min-h-full">
       <div class="flex items-center gap-3 mb-10 px-2 py-4 border-b border-slate-800">
         <i class="fas fa-warehouse text-indigo-500 text-2xl"></i>
         <span class="text-xl font-bold text-white tracking-tight text-nowrap">Haruwen<span
@@ -85,83 +85,104 @@
       </div>
 
       <ul class="space-y-2 font-medium flex-grow">
-        <li>
+        <li id="menu-dashboard">
           <button onclick="loadPage('inicio.html')"
-            class="w-full flex items-center p-3 text-white bg-indigo-600 rounded-xl">
+            class="w-full flex items-center p-3 text-white bg-indigo-600 rounded-xl shadow-lg shadow-indigo-900/50">
             <i class="fas fa-th-large w-6"></i>
-            <span class="ml-3 font-bold uppercase italic">Dashboard</span>
+            <span class="ml-3 font-black uppercase italic tracking-widest text-xs">Dashboard</span>
           </button>
         </li>
-        <li>
+        <li id="menu-consulta">
+          <button onclick="loadPage('consulta.html')"
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-all group text-left text-indigo-400">
+            <i class="fas fa-search w-6 group-hover:scale-110 transition-transform"></i>
+            <span class="ml-3 font-black uppercase italic tracking-widest text-xs">Consultar</span>
+          </button>
+        </li>
+        <li id="menu-pedidos">
           <button onclick="loadPage('pedidos.html')"
-            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left">
-            <i class="fas fa-clipboard-list w-6 group-hover:text-indigo-400"></i>
-            <span class="ml-3 font-bold">Pedidos</span>
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-all group text-left text-amber-400">
+            <i class="fas fa-clipboard-list w-6 group-hover:scale-110 transition-transform"></i>
+            <span class="ml-3 font-black uppercase italic tracking-widest text-xs">Pedidos</span>
           </button>
         </li>
-        <li>
+        <li id="menu-facturacion">
           <button onclick="loadPage('facturacion.html')"
-            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left text-rose-300">
-            <i class="fas fa-file-invoice-dollar w-6 group-hover:text-rose-400"></i>
-            <span class="ml-3 font-bold">Ventas / Facturas</span>
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-all group text-left text-rose-400">
+            <i class="fas fa-file-invoice-dollar w-6 group-hover:scale-110 transition-transform"></i>
+            <span class="ml-3 font-black uppercase italic tracking-widest text-xs">Ventas / Facturas</span>
           </button>
         </li>
-        <li>
+        <li id="menu-clientes">
           <button onclick="loadPage('clientes.html')"
-            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left">
-            <i class="fas fa-users w-6 group-hover:text-indigo-400"></i>
-            <span class="ml-3 font-bold uppercase italic">Clientes</span>
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-all group text-left text-sky-400">
+            <i class="fas fa-users w-6 group-hover:scale-110 transition-transform"></i>
+            <span class="ml-3 font-black uppercase italic tracking-widest text-xs">Clientes</span>
           </button>
         </li>
-        <li>
+        <li id="menu-recepcion">
+          <button onclick="loadPage('recepcion.html')"
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-all group text-left text-emerald-400">
+            <i class="fas fa-download w-6 group-hover:scale-110 transition-transform"></i>
+            <span class="ml-3 font-black uppercase italic tracking-widest text-xs">Recepción</span>
+          </button>
+        </li>
+        <li id="menu-posiciones">
           <button onclick="loadPage('posiciones.html')"
-            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left">
-            <i class="fas fa-map-location-dot w-6 group-hover:text-indigo-400"></i>
-            <span class="ml-3 font-bold">Posiciones</span>
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-all group text-left text-violet-400">
+            <i class="fas fa-map-location-dot w-6 group-hover:scale-110 transition-transform"></i>
+            <span class="ml-3 font-black uppercase italic tracking-widest text-xs">Posiciones</span>
           </button>
         </li>
-        <li>
+        <li id="menu-inventario">
           <button onclick="loadPage('inventario.html')"
-            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left">
-            <i class="fas fa-boxes-stacked w-6 group-hover:text-indigo-400"></i>
-            <span class="ml-3 font-bold">Inventario</span>
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-all group text-left text-blue-400">
+            <i class="fas fa-boxes-stacked w-6 group-hover:scale-110 transition-transform"></i>
+            <span class="ml-3 font-black uppercase italic tracking-widest text-xs">Inventario</span>
           </button>
         </li>
-        <li>
+        <li id="menu-movimientos">
           <button onclick="loadPage('movimientos.html')"
-            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left">
-            <i class="fas fa-exchange-alt w-6 group-hover:text-indigo-400"></i>
-            <span class="ml-3 font-bold">Movimientos</span>
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-all group text-left text-cyan-400">
+            <i class="fas fa-exchange-alt w-6 group-hover:scale-110 transition-transform"></i>
+            <span class="ml-3 font-black uppercase italic tracking-widest text-xs">Movimientos</span>
           </button>
         </li>
       </ul>
 
-      <div class="pt-4 border-t border-slate-800">
-        <div class="flex items-center p-2 mb-4">
-          <div id="user-sidebar-initial"
-            class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold mr-3">
-            <i class="fas fa-user text-xs"></i>
-          </div>
-          <div class="overflow-hidden">
-            <p id="user-sidebar-name" class="text-sm font-bold text-white truncate italic">
-              ...
-            </p>
-            <p class="text-[10px] text-slate-500 uppercase font-bold">
-              Usuario
-            </p>
+      <div class="pt-6 border-t border-slate-800 mt-2">
+        <!-- Card de Usuario Rediseñada -->
+        <div class="bg-slate-800/40 rounded-2xl p-4 mb-4 border border-slate-700/50 backdrop-blur-sm">
+          <div class="flex items-center gap-3">
+            <div id="user-sidebar-initial"
+              class="w-12 h-12 flex-shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black shadow-lg shadow-indigo-500/20 border border-white/10 text-xl">
+              <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p id="user-sidebar-name"
+                class="text-xs font-black text-white italic uppercase tracking-tighter break-all leading-tight">
+                Cargando...
+              </p>
+              <p class="text-[9px] text-indigo-400 font-black uppercase tracking-[0.2em] mt-1 opacity-80">
+                Administración
+              </p>
+            </div>
           </div>
         </div>
+
         <a href="../index.html"
-          class="flex items-center p-3 text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors">
-          <i class="fas fa-sign-out-alt w-6"></i>
-          <span class="ml-3 italic text-sm font-bold">Cerrar Sesión</span>
+          class="flex items-center p-3 text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all group">
+          <i class="fas fa-sign-out-alt w-6 group-hover:-translate-x-1 transition-transform"></i>
+          <span class="ml-3 font-black uppercase italic tracking-widest text-xs">Cerrar Sesión</span>
         </a>
-        <p class="text-[9px] text-slate-600 text-center mt-4 uppercase tracking-widest font-bold">
+
+        <p class="text-[9px] text-slate-600 text-center mt-6 uppercase tracking-[0.3em] font-black opacity-30">
           HaruwenTech 2026
         </p>
       </div>
     </div>
   </aside>
+
 
   <!-- Overlay oscuro para cerrar sidebar en móvil -->
   <div id="sidebar-overlay" onclick="closeSidebar()"
@@ -175,6 +196,9 @@
   </button>
 
   <main id="main-content" class="p-4 md:ml-64 min-h-screen">
+    <!-- Navegación: Breadcrumbs Dinámicos -->
+    <div id="breadcrumb-container" class="max-w-5xl mx-auto mb-4 px-2"></div>
+
     <div id="view-container" class="max-w-5xl mx-auto">
       <header class="flex justify-between items-center mb-8 mt-12 md:mt-0">
         <div>
@@ -328,7 +352,7 @@
     </div>
   </div>
 
-  <!-- Módulo móvil (debe cargarse antes de app.js) -->
+  <!-- Módulo móvil y base (scripts pesados se cargan bajo demanda vía router.js) -->
   <script src="../js/mobile.js"></script>
   <script src="../js/app.js"></script>
 </body>

@@ -141,8 +141,8 @@ function pintarTablaPedidos(data) {
                 </span>
             </td>
             <td class="p-4 text-center">
-                <button onclick="procesarPicking('${p.id}')" class="text-indigo-600 hover:text-indigo-800 p-2 text-lg">
-                    <i class="fas ${p.estado === "pendiente" ? "fa-box-open" : "fa-check-double"}"></i>
+                <button onclick="generarHojaDeRuta('${p.id}')" class="text-indigo-600 hover:text-indigo-800 p-2 text-lg">
+                    <i class="fas ${p.estado === "pendiente" ? "fa-route" : "fa-check-double"}"></i>
                 </button>
             </td>
         </tr>`,

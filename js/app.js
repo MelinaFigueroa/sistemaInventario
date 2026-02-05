@@ -21,7 +21,6 @@ async function checkUser() {
     const { data: { user } } = await _supabase.auth.getUser();
 
     if (!user) {
-        // Si estamos en una página dentro de /pages/, redirigir al index.html raíz
         if (window.location.pathname.includes('/pages/')) {
             window.location.href = "../index.html";
         } else {
@@ -30,23 +29,99 @@ async function checkUser() {
         return;
     }
 
-    // Actualizar UI con info del usuario
+    // 1. Cargar Perfil y Permisos
+    await cargarPerfilUsuario(user.id, user.email);
+
+    // 2. Actualizar UI General
     USUARIO_ACTUAL = user.email?.split('@')[0] || "Usuario";
-    const elementoNombre = document.getElementById("user-sidebar-name");
     const elementoGreeting = document.getElementById("user-header-greeting");
-    const elementoInitial = document.getElementById("user-sidebar-initial");
-
-    if (elementoNombre) {
-        elementoNombre.innerText = user.email || "Usuario";
-    }
-
     if (elementoGreeting) {
         elementoGreeting.innerText = `Bienvenida/o, ${USUARIO_ACTUAL}`;
     }
+}
 
-    if (elementoInitial) {
-        elementoInitial.innerText = USUARIO_ACTUAL.charAt(0).toUpperCase();
+async function cargarPerfilUsuario(userId, email) {
+    try {
+        const { data: perfil, error } = await _supabase
+            .from('perfiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+        if (error) throw error;
+
+        // Actualizar Card de Usuario
+        const elementoNombre = document.getElementById("user-sidebar-name");
+        const elementoRol = document.querySelector(".text-indigo-400.font-black.uppercase"); // El label de rol en el card
+
+        if (elementoNombre) {
+            // Si el perfil tiene nombre, usarlo, sino el email
+            elementoNombre.innerText = perfil.nombre || email;
+        }
+
+        if (elementoRol) {
+            elementoRol.innerText = perfil.rol || "Usuario";
+        }
+
+        // Aplicar restricciones visuales
+        aplicarPermisosSidebar(perfil.rol);
+
+    } catch (err) {
+        console.error("Error cargando perfil:", err);
+        // Fallback básico si falla la tabla perfiles
+        aplicarPermisosSidebar('invitado');
     }
+}
+
+// Variable global para persistir el rol
+window.currentUserRole = 'invitado';
+
+function aplicarPermisosSidebar(rol) {
+    window.currentUserRole = rol?.toLowerCase() || 'invitado';
+
+    const menuIds = [
+        'menu-dashboard', 'menu-consulta', 'menu-pedidos',
+        'menu-facturacion', 'menu-clientes', 'menu-recepcion',
+        'menu-posiciones', 'menu-inventario', 'menu-movimientos'
+    ];
+
+    menuIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        if (tienePermiso(id)) {
+            el.classList.remove('hidden');
+        } else {
+            el.classList.add('hidden');
+        }
+    });
+
+    // Forzar renderizado inicial si el dashboard está vacío
+    const container = document.getElementById('view-container');
+    if (container && container.innerHTML.includes('fa-paw')) {
+        loadPage('inicio.html');
+    }
+}
+
+// Función centralizada de seguridad
+function tienePermiso(idOMenu) {
+    const rol = window.currentUserRole;
+
+    // Mapeo unificado: ID de Menú -> Página HTML relacionada
+    const permisos = {
+        'admin': ['*'], // Comodín para todo
+        'administracion': ['menu-dashboard', 'menu-consulta', 'menu-pedidos', 'menu-facturacion', 'menu-clientes', 'menu-inventario', 'menu-movimientos', 'inicio.html', 'consulta.html', 'pedidos.html', 'facturacion.html', 'clientes.html', 'inventario.html', 'movimientos.html'],
+        'ventas': ['menu-dashboard', 'menu-consulta', 'menu-pedidos', 'menu-clientes', 'menu-inventario', 'inicio.html', 'consulta.html', 'pedidos.html', 'clientes.html', 'inventario.html'],
+        'deposito': ['menu-dashboard', 'menu-consulta', 'menu-pedidos', 'menu-recepcion', 'menu-posiciones', 'menu-inventario', 'menu-movimientos', 'inicio.html', 'consulta.html', 'pedidos.html', 'recepcion.html', 'posiciones.html', 'inventario.html', 'movimientos.html'],
+        'invitado': ['menu-dashboard', 'menu-consulta', 'inicio.html', 'consulta.html']
+    };
+
+    const misAccesos = permisos[rol] || permisos['invitado'];
+
+    if (misAccesos.includes('*')) return true;
+
+    // El idOMenu puede ser el ID del <li> o el nombre del archivo .html
+    return misAccesos.includes(idOMenu);
 }
 
 // ==========================================

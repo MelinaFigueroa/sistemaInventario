@@ -116,17 +116,37 @@ async function transferirEntreRacks(origenId, destinoId, cantidad) {
             estado: "ocupado"
         }).eq("id", destinoId);
 
-        // 4. Registrar movimiento
+        // 4. Actualizar Lotes (Crítico para Trazabilidad)
+        // Buscamos el lote que está en el origen y lo movemos al destino
+        const { data: lotesOrigen } = await _supabase
+            .from("lotes")
+            .select("id, numero_lote, cantidad_actual")
+            .eq("producto_id", productoId)
+            .eq("posicion_id", origenId)
+            .gt("cantidad_actual", 0)
+            .limit(1);
+
+        if (lotesOrigen && lotesOrigen.length > 0) {
+            const lote = lotesOrigen[0];
+            // En una versión más compleja separaríamos el lote si movemos solo una parte,
+            // por ahora actualizamos la posición del lote principal si se mueve todo o parte.
+            await _supabase.from("lotes").update({
+                posicion_id: destinoId
+            }).eq("id", lote.id);
+        }
+
+        // 5. Registrar movimiento de Auditoría
         await _supabase.from("movimientos").insert([{
             producto_id: productoId,
             tipo: "TRANSFERENCIA",
             origen: origenId,
             destino: destinoId,
             cantidad: cantidad,
-            usuario: USUARIO_ACTUAL
+            usuario: USUARIO_ACTUAL,
+            referencia: `Traspaso entre racks (Auditoría Automática)`
         }]);
 
-        Notificar.toast("Transferencia completada", "success");
+        Notificar.toast("Transferencia completada y Auditada", "success");
 
         if (typeof renderPosiciones === 'function') renderPosiciones();
         if (typeof renderMovimientos === 'function') renderMovimientos();

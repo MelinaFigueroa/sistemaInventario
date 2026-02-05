@@ -8,9 +8,11 @@ async function procesarRecepcion() {
     const productoId = document.getElementById("rec-producto")?.value;
     const destino = document.getElementById("rec-destino")?.value;
     const cantidad = parseInt(document.getElementById("rec-cantidad")?.value);
+    const lote = document.getElementById("rec-lote")?.value;
+    const vencimiento = document.getElementById("rec-vencimiento")?.value;
 
-    if (!productoId || !destino || !cantidad || cantidad <= 0) {
-        Notificar.error("DATOS INCOMPLETOS", "Completá todos los campos con valores válidos.");
+    if (!productoId || !destino || !cantidad || cantidad <= 0 || !lote || !vencimiento) {
+        Notificar.error("DATOS INCOMPLETOS", "Completá todos los campos, incluyendo Lote y Vencimiento para el sistema FEFO.");
         return;
     }
 
@@ -30,14 +32,25 @@ async function procesarRecepcion() {
             estado: "ocupado"
         }).eq("id", destino);
 
-        // 2. Registrar movimiento
+        // 2. Registrar Lote (Crítico para FEFO)
+        await _supabase.from("lotes").insert([{
+            producto_id: productoId,
+            numero_lote: lote,
+            vencimiento: vencimiento,
+            cantidad_inicial: cantidad,
+            cantidad_actual: cantidad,
+            posicion_id: destino
+        }]);
+
+        // 3. Registrar movimiento
         await _supabase.from("movimientos").insert([{
             producto_id: productoId,
             tipo: "ENTRADA",
             origen: "PROVEEDOR",
             destino: destino,
             cantidad: cantidad,
-            usuario: USUARIO_ACTUAL
+            usuario: USUARIO_ACTUAL,
+            referencia: `Lote: ${lote} | Venc: ${vencimiento}`
         }]);
 
         Notificar.toast("Recepción procesada correctamente", "success");
