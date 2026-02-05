@@ -1,0 +1,60 @@
+# HaruwenWMS - Archivos a ignorar en Git
+
+# Configuración local sensible
+js/config.local.js
+.env
+.env.local
+
+# Dependencias
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs (si migras a framework)
+dist/
+build/
+.output/
+.vite/
+.cache/
+
+# Certificados y claves
+certs/
+*.pem
+*.key
+*.crt
+
+# Logs
+logs/
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Backups temporales
+*.bak
+*.tmp
+backup/
+
+# Archivos de testing
+coverage/
+.nyc_output/
+
+# Supabase local
+.supabase/
+supabase/.branches
+supabase/.temp
+
+# Archivos de usuario (documentos subidos)
+uploads/
+temp_files/

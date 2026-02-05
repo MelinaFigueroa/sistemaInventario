@@ -1,362 +1,304 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HaruwenWMS - Panel de Control</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="https://unpkg.com/html5-qrcode"></script>
 
-<script src="js/config.js"></script>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HaruwenWMS - Panel de Control</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
 
-<script src="js/recepcion.js"></script>
-<script src="js/movimientos.js"></script>
+  <!-- Core: Configuración y variables globales -->
+  <script src="../js/config.js"></script>
 
-<script src="js/router.js"></script>
+  <!-- Router: Sistema de navegación SPA -->
+  <script src="../js/router.js"></script>
 
-<script>
+  <!-- Módulos de funcionalidad -->
+  <script src="../js/renders.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/pedidos.js"></script>
+  <script src="../js/recepcion.js"></script>
+  <script src="../js/movimientos.js"></script>
+
+  <script>
     // Inicialización al cargar
     window.onload = () => {
-        checkUser(); // Verificamos sesión
-        loadPage('views/inicio.html'); // Cargamos home
+      checkUser(); // Verificamos sesión
+      loadPage('inicio.html'); // Cargamos vista de inicio
     };
-</script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap");
-      body {
-        font-family: "Inter", sans-serif;
-      }
-      .animate-fadeIn {
-        animation: fadeIn 0.3s ease-in;
-      }
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-    </style>
-  </head>
-  <body class="bg-slate-100 min-h-screen">
-    <aside
-      id="sidebar"
-      class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full md:translate-x-0 bg-slate-900 text-slate-300"
-    >
-      <div class="h-full px-3 py-4 overflow-y-auto flex flex-col">
-        <div
-          class="flex items-center gap-3 mb-10 px-2 py-4 border-b border-slate-800"
-        >
-          <i class="fas fa-warehouse text-indigo-500 text-2xl"></i>
-          <span class="text-xl font-bold text-white tracking-tight text-nowrap"
-            >Haruwen<span class="text-indigo-400">WMS</span></span
-          >
-        </div>
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap");
 
-        <ul class="space-y-2 font-medium flex-grow">
-          <li>
-            <button
-              onclick="loadPage('inicio.html')"
-              class="w-full flex items-center p-3 text-white bg-indigo-600 rounded-xl"
-            >
-              <i class="fas fa-th-large w-6"></i>
-              <span class="ml-3 font-bold uppercase italic">Dashboard</span>
-            </button>
-          </li>
-          <li>
-            <button
-              onclick="loadPage('pedidos.html')"
-              class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left"
-            >
-              <i
-                class="fas fa-clipboard-list w-6 group-hover:text-indigo-400"
-              ></i>
-              <span class="ml-3 font-bold">Pedidos</span>
-            </button>
-          </li>
-          <li>
-    <button onclick="loadPage('facturacion.html')" class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left text-rose-300">
-        <i class="fas fa-file-invoice-dollar w-6 group-hover:text-rose-400"></i>
-        <span class="ml-3 font-bold">Ventas / Facturas</span>
-    </button>
-</li>
-          <li>
-            <button
-              onclick="loadPage('posiciones.html')"
-              class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left"
-            >
-              <i
-                class="fas fa-map-location-dot w-6 group-hover:text-indigo-400"
-              ></i>
-              <span class="ml-3 font-bold">Posiciones</span>
-            </button>
-          </li>
-          <li>
-            <button
-              onclick="loadPage('inventario.html')"
-              class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left"
-            >
-              <i
-                class="fas fa-boxes-stacked w-6 group-hover:text-indigo-400"
-              ></i>
-              <span class="ml-3 font-bold">Inventario</span>
-            </button>
-          </li>
-          <li>
-            <button
-              onclick="loadPage('movimientos.html')"
-              class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left"
-            >
-              <i
-                class="fas fa-exchange-alt w-6 group-hover:text-indigo-400"
-              ></i>
-              <span class="ml-3 font-bold">Movimientos</span>
-            </button>
-          </li>
-        </ul>
+    body {
+      font-family: "Inter", sans-serif;
+    }
 
-        <div class="pt-4 border-t border-slate-800">
-          <div class="flex items-center p-2 mb-4">
-            <div
-              id="user-sidebar-initial"
-              class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold mr-3"
-            >
-              <i class="fas fa-user text-xs"></i>
-            </div>
-            <div class="overflow-hidden">
-              <p id="user-sidebar-name" class="text-sm font-bold text-white truncate italic">
-                ...
-              </p>
-              <p class="text-[10px] text-slate-500 uppercase font-bold">
-                Usuario
-              </p>
-            </div>
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen">
+  <aside id="sidebar"
+    class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full md:translate-x-0 bg-slate-900 text-slate-300">
+    <div class="h-full px-3 py-4 overflow-y-auto flex flex-col">
+      <div class="flex items-center gap-3 mb-10 px-2 py-4 border-b border-slate-800">
+        <i class="fas fa-warehouse text-indigo-500 text-2xl"></i>
+        <span class="text-xl font-bold text-white tracking-tight text-nowrap">Haruwen<span
+            class="text-indigo-400">WMS</span></span>
+      </div>
+
+      <ul class="space-y-2 font-medium flex-grow">
+        <li>
+          <button onclick="loadPage('inicio.html')"
+            class="w-full flex items-center p-3 text-white bg-indigo-600 rounded-xl">
+            <i class="fas fa-th-large w-6"></i>
+            <span class="ml-3 font-bold uppercase italic">Dashboard</span>
+          </button>
+        </li>
+        <li>
+          <button onclick="loadPage('pedidos.html')"
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left">
+            <i class="fas fa-clipboard-list w-6 group-hover:text-indigo-400"></i>
+            <span class="ml-3 font-bold">Pedidos</span>
+          </button>
+        </li>
+        <li>
+          <button onclick="loadPage('facturacion.html')"
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left text-rose-300">
+            <i class="fas fa-file-invoice-dollar w-6 group-hover:text-rose-400"></i>
+            <span class="ml-3 font-bold">Ventas / Facturas</span>
+          </button>
+        </li>
+        <li>
+          <button onclick="loadPage('posiciones.html')"
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left">
+            <i class="fas fa-map-location-dot w-6 group-hover:text-indigo-400"></i>
+            <span class="ml-3 font-bold">Posiciones</span>
+          </button>
+        </li>
+        <li>
+          <button onclick="loadPage('inventario.html')"
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left">
+            <i class="fas fa-boxes-stacked w-6 group-hover:text-indigo-400"></i>
+            <span class="ml-3 font-bold">Inventario</span>
+          </button>
+        </li>
+        <li>
+          <button onclick="loadPage('movimientos.html')"
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-colors group text-left">
+            <i class="fas fa-exchange-alt w-6 group-hover:text-indigo-400"></i>
+            <span class="ml-3 font-bold">Movimientos</span>
+          </button>
+        </li>
+      </ul>
+
+      <div class="pt-4 border-t border-slate-800">
+        <div class="flex items-center p-2 mb-4">
+          <div id="user-sidebar-initial"
+            class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold mr-3">
+            <i class="fas fa-user text-xs"></i>
           </div>
-          <a
-            href="../index.html"
-            class="flex items-center p-3 text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors"
-          >
-            <i class="fas fa-sign-out-alt w-6"></i>
-            <span class="ml-3 italic text-sm font-bold">Cerrar Sesión</span>
-          </a>
-          <p
-            class="text-[9px] text-slate-600 text-center mt-4 uppercase tracking-widest font-bold"
-          >
-            HaruwenTech 2026
+          <div class="overflow-hidden">
+            <p id="user-sidebar-name" class="text-sm font-bold text-white truncate italic">
+              ...
+            </p>
+            <p class="text-[10px] text-slate-500 uppercase font-bold">
+              Usuario
+            </p>
+          </div>
+        </div>
+        <a href="../index.html"
+          class="flex items-center p-3 text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors">
+          <i class="fas fa-sign-out-alt w-6"></i>
+          <span class="ml-3 italic text-sm font-bold">Cerrar Sesión</span>
+        </a>
+        <p class="text-[9px] text-slate-600 text-center mt-4 uppercase tracking-widest font-bold">
+          HaruwenTech 2026
+        </p>
+      </div>
+    </div>
+  </aside>
+
+  <button onclick="toggleSidebar()"
+    class="fixed top-4 left-4 z-50 p-2 text-slate-600 bg-white rounded-lg shadow-md md:hidden">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <main id="main-content" class="p-4 md:ml-64 min-h-screen">
+    <div id="view-container" class="max-w-5xl mx-auto">
+      <header class="flex justify-between items-center mb-8 mt-12 md:mt-0">
+        <div>
+          <h2 id="user-header-greeting" class="text-2xl font-bold text-slate-800 italic">
+            Bienvenida/o
+          </h2>
+          <p class="text-slate-500">
+            Estado actual del depósito en Río Grande
+          </p>
+        </div>
+        <div class="hidden md:block text-right text-slate-400">
+          <p class="text-sm font-bold text-slate-800">TDF, Argentina</p>
+          <p class="text-xs font-bold">03 de Febrero, 2026</p>
+        </div>
+      </header>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 border-b-4 border-b-indigo-500">
+          <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">
+            Stock Total
+          </p>
+          <p class="text-3xl font-black text-slate-800 mt-1">
+            1.250 <span class="text-sm font-normal text-slate-400">u.</span>
           </p>
         </div>
       </div>
-    </aside>
+    </div>
+  </main>
 
-    <button
-      onclick="toggleSidebar()"
-      class="fixed top-4 left-4 z-50 p-2 text-slate-600 bg-white rounded-lg shadow-md md:hidden"
-    >
-      <i class="fas fa-bars"></i>
-    </button>
+  <div id="drawer-overlay" onclick="closeDrawer()"
+    class="fixed inset-0 bg-slate-900/50 z-50 hidden backdrop-blur-sm transition-opacity"></div>
 
-    <main id="main-content" class="p-4 md:ml-64 min-h-screen">
-      <div id="view-container" class="max-w-5xl mx-auto">
-        <header class="flex justify-between items-center mb-8 mt-12 md:mt-0">
-          <div>
-            <h2 id="user-header-greeting" class="text-2xl font-bold text-slate-800 italic">
-              Bienvenida/o
-            </h2>
-            <p class="text-slate-500">
-              Estado actual del depósito en Río Grande
-            </p>
-          </div>
-          <div class="hidden md:block text-right text-slate-400">
-            <p class="text-sm font-bold text-slate-800">TDF, Argentina</p>
-            <p class="text-xs font-bold">03 de Febrero, 2026</p>
-          </div>
-        </header>
+  <div id="drawer"
+    class="fixed top-0 right-0 z-[60] h-screen w-full md:w-96 bg-white shadow-2xl translate-x-full transition-transform duration-300 ease-in-out p-6 overflow-y-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-bold text-slate-800 italic" id="drawer-pos-id">
+        Posición
+      </h3>
+      <button onclick="closeDrawer()" class="text-slate-400 hover:text-slate-600 p-2">
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div
-            class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 border-b-4 border-b-indigo-500"
-          >
-            <p
-              class="text-slate-400 text-xs font-bold uppercase tracking-wider"
-            >
-              Stock Total
-            </p>
-            <p class="text-3xl font-black text-slate-800 mt-1">
-              1.250 <span class="text-sm font-normal text-slate-400">u.</span>
-            </p>
-          </div>
+    <div id="step-1" class="space-y-6">
+      <div class="bg-indigo-50 p-4 rounded-2xl flex items-center gap-4 border border-indigo-100 font-bold">
+        <div class="w-16 h-16 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-sm">
+          <i id="drawer-icon" class="fas fa-box text-3xl"></i>
+        </div>
+        <div>
+          <h4 class="font-bold text-slate-800 italic" id="drawer-prod-name">
+            Producto
+          </h4>
+          <p class="text-xs text-slate-500 font-bold" id="drawer-prod-desc">
+            Descripción
+          </p>
         </div>
       </div>
-    </main>
 
-    <div
-      id="drawer-overlay"
-      onclick="closeDrawer()"
-      class="fixed inset-0 bg-slate-900/50 z-50 hidden backdrop-blur-sm transition-opacity"
-    ></div>
+      <div class="bg-slate-50 p-4 rounded-2xl text-center">
+        <p class="text-[10px] uppercase font-bold text-slate-400">
+          Stock Actual
+        </p>
+        <p class="text-3xl font-black text-slate-800" id="drawer-prod-qty">
+          0
+        </p>
+      </div>
 
-    <div
-      id="drawer"
-      class="fixed top-0 right-0 z-[60] h-screen w-full md:w-96 bg-white shadow-2xl translate-x-full transition-transform duration-300 ease-in-out p-6 overflow-y-auto"
-    >
-      <div class="flex justify-between items-center mb-6">
-        <h3 class="text-xl font-bold text-slate-800 italic" id="drawer-pos-id">
-          Posición
-        </h3>
+      <div class="space-y-3 pt-4 border-t border-slate-100">
+        <button onclick="goToStep2()"
+          class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">
+          <i class="fas fa-exchange-alt"></i> Mover Stock
+        </button>
         <button
-          onclick="closeDrawer()"
-          class="text-slate-400 hover:text-slate-600 p-2"
-        >
-          <i class="fas fa-times text-xl"></i>
+          class="w-full bg-white border border-slate-200 text-slate-600 p-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-slate-50 transition-all">
+          <i class="fas fa-pen"></i> Ajustar Inventario
         </button>
       </div>
+    </div>
 
-      <div id="step-1" class="space-y-6">
-        <div
-          class="bg-indigo-50 p-4 rounded-2xl flex items-center gap-4 border border-indigo-100 font-bold"
-        >
-          <div
-            class="w-16 h-16 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-sm"
-          >
-            <i id="drawer-icon" class="fas fa-box text-3xl"></i>
-          </div>
-          <div>
-            <h4 class="font-bold text-slate-800 italic" id="drawer-prod-name">
-              Producto
-            </h4>
-            <p class="text-xs text-slate-500 font-bold" id="drawer-prod-desc">
-              Descripción
-            </p>
-          </div>
+    <div id="step-2" class="hidden space-y-6 animate-fadeIn">
+      <button onclick="goToStep1()" class="text-indigo-600 text-sm font-bold flex items-center gap-2 mb-4 italic">
+        <i class="fas fa-arrow-left"></i> Volver al detalle
+      </button>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-2 font-bold uppercase italic">Cantidad a mover</label>
+          <input type="number" id="move-qty"
+            class="w-full p-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
+            placeholder="Ej: 100" />
         </div>
-
-        <div class="bg-slate-50 p-4 rounded-2xl text-center">
-          <p class="text-[10px] uppercase font-bold text-slate-400">
-            Stock Actual
-          </p>
-          <p class="text-3xl font-black text-slate-800" id="drawer-prod-qty">
-            0
-          </p>
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-2 font-bold uppercase italic">Posición Destino</label>
+          <select id="move-dest"
+            class="w-full p-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+            <option value="">Seleccionar posición...</option>
+            <option value="A-01-04">A-01-04 (Vacío)</option>
+            <option value="A-01-08">A-01-08 (Vacío)</option>
+          </select>
         </div>
-
-        <div class="space-y-3 pt-4 border-t border-slate-100">
-          <button
-            onclick="goToStep2()"
-            class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all"
-          >
-            <i class="fas fa-exchange-alt"></i> Mover Stock
-          </button>
-          <button
-            class="w-full bg-white border border-slate-200 text-slate-600 p-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-slate-50 transition-all"
-          >
-            <i class="fas fa-pen"></i> Ajustar Inventario
-          </button>
-        </div>
-      </div>
-
-      <div id="step-2" class="hidden space-y-6 animate-fadeIn">
-        <button
-          onclick="goToStep1()"
-          class="text-indigo-600 text-sm font-bold flex items-center gap-2 mb-4 italic"
-        >
-          <i class="fas fa-arrow-left"></i> Volver al detalle
+        <button onclick="confirmMove()"
+          class="w-full bg-emerald-500 text-white p-4 rounded-xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-100 transition-all uppercase">
+          Confirmar Traspaso
         </button>
+      </div>
+    </div>
+  </div>
+  <div id="modal-pedido"
+    class="fixed inset-0 bg-slate-900/60 z-[100] hidden backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-fadeIn">
+      <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+        <h3 class="text-xl font-bold text-slate-800 italic uppercase">Generar Nuevo Pedido Vital Can</h3>
+        <button onclick="cerrarModalPedido()" class="text-slate-400 hover:text-slate-600"><i
+            class="fas fa-times"></i></button>
+      </div>
+      <div class="p-8 space-y-6">
+        <div>
+          <label class="block text-xs font-black text-slate-400 uppercase italic mb-2">Cliente (Veterinaria / Pet
+            Shop)</label>
+          <input type="text" id="ped-cliente" placeholder="Ej: Veterinaria Reino Salvaje"
+            class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold italic text-slate-700">
+        </div>
 
-        <div class="space-y-4">
-          <div>
-            <label
-              class="block text-sm font-bold text-slate-700 mb-2 font-bold uppercase italic"
-              >Cantidad a mover</label
-            >
-            <input
-              type="number"
-              id="move-qty"
-              class="w-full p-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-              placeholder="Ej: 100"
-            />
-          </div>
-          <div>
-            <label
-              class="block text-sm font-bold text-slate-700 mb-2 font-bold uppercase italic"
-              >Posición Destino</label
-            >
-            <select
-              id="move-dest"
-              class="w-full p-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-            >
-              <option value="">Seleccionar posición...</option>
-              <option value="A-01-04">A-01-04 (Vacío)</option>
-              <option value="A-01-08">A-01-08 (Vacío)</option>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <div class="md:col-span-2">
+            <label class="block text-[10px] font-black text-slate-400 uppercase italic mb-1">Producto</label>
+            <select id="ped-producto-select" class="w-full p-3 bg-white rounded-xl outline-none font-bold text-sm">
             </select>
           </div>
-          <button
-            onclick="confirmMove()"
-            class="w-full bg-emerald-500 text-white p-4 rounded-xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-100 transition-all uppercase"
-          >
-            Confirmar Traspaso
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase italic mb-1">Cant.</label>
+            <input type="number" id="ped-cantidad-input" placeholder="0"
+              class="w-full p-3 bg-white rounded-xl outline-none font-bold">
+          </div>
+          <button onclick="agregarItemTemporal()"
+            class="md:col-span-3 bg-slate-800 text-white p-3 rounded-xl font-bold text-xs uppercase hover:bg-slate-700 transition-all">
+            <i class="fas fa-plus mr-2"></i> Añadir a la lista
           </button>
         </div>
+
+        <div class="max-h-40 overflow-y-auto border-t border-b border-slate-50 py-2" id="lista-items-temporal">
+          <p class="text-center text-slate-400 text-xs italic py-4">No hay productos añadidos aún.</p>
+        </div>
+
+        <button onclick="guardarPedidoSupabase()"
+          class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black italic uppercase shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">
+          Confirmar y Guardar Pedido
+        </button>
       </div>
     </div>
-    <div id="modal-pedido" class="fixed inset-0 bg-slate-900/60 z-[100] hidden backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-fadeIn">
-        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-            <h3 class="text-xl font-bold text-slate-800 italic uppercase">Generar Nuevo Pedido Vital Can</h3>
-            <button onclick="cerrarModalPedido()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="p-8 space-y-6">
-            <div>
-                <label class="block text-xs font-black text-slate-400 uppercase italic mb-2">Cliente (Veterinaria / Pet Shop)</label>
-                <input type="text" id="ped-cliente" placeholder="Ej: Veterinaria Reino Salvaje" 
-                    class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold italic text-slate-700">
-            </div>
+  </div>
+  <script src="../js/app.js"></script>
+</body>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <div class="md:col-span-2">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase italic mb-1">Producto</label>
-                    <select id="ped-producto-select" class="w-full p-3 bg-white rounded-xl outline-none font-bold text-sm">
-                        </select>
-                </div>
-                <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase italic mb-1">Cant.</label>
-                    <input type="number" id="ped-cantidad-input" placeholder="0" class="w-full p-3 bg-white rounded-xl outline-none font-bold">
-                </div>
-                <button onclick="agregarItemTemporal()" class="md:col-span-3 bg-slate-800 text-white p-3 rounded-xl font-bold text-xs uppercase hover:bg-slate-700 transition-all">
-                    <i class="fas fa-plus mr-2"></i> Añadir a la lista
-                </button>
-            </div>
-
-            <div class="max-h-40 overflow-y-auto border-t border-b border-slate-50 py-2" id="lista-items-temporal">
-                <p class="text-center text-slate-400 text-xs italic py-4">No hay productos añadidos aún.</p>
-            </div>
-
-            <button onclick="guardarPedidoSupabase()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black italic uppercase shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">
-                Confirmar y Guardar Pedido
-            </button>
-        </div>
-    </div>
-</div>
-    <script src="../js/app.js"></script>
-    <script>
-      async function checkUser() {
-    const { data: { user } } = await _supabase.auth.getUser();
-    if (!user) {
-        window.location.href = "../index.html"; // Lo manda afuera si no hay sesión
-    }
-}
-checkUser();
-    </script>
-  </body>
 </html>
