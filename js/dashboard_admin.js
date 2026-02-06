@@ -302,7 +302,7 @@ function actualizarBadgeSidebar(count) {
 }
 
 function renderizarFechaActual() {
-    const el = document.getElementById('current-date');
+    const el = document.getElementById('global-current-date');
     if (el) {
         const opciones = { weekday: 'long', day: 'numeric', month: 'long' };
         el.innerText = new Date().toLocaleDateString('es-AR', opciones).toUpperCase();

@@ -333,6 +333,58 @@
   </button>
 
   <main id="main-content" class="p-4 md:ml-64 min-h-screen">
+    <!-- Header Global Premium -->
+    <header id="global-header" class="mb-6 animate-fadeIn max-w-5xl mx-auto px-4 pt-4">
+      <div
+        class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 relative overflow-hidden">
+        <!-- Decoración sutil -->
+        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+
+        <div class="relative z-10 flex-grow">
+          <div class="flex items-center gap-6">
+            <!-- Saludo Gigante -->
+            <h2 class="text-5xl font-black text-slate-800 italic uppercase tracking-tighter leading-none">¡Hola!</h2>
+
+            <!-- Info Usuario -->
+            <div class="flex flex-col">
+              
+
+              <!-- Nombre y Apellido -->
+              <div class="flex flex-col leading-none">
+                <span id="user-first-name"
+                  class="text-2xl font-black text-indigo-600 uppercase italic tracking-tighter">Cargando...</span>
+                <span id="user-last-name"
+                  class="text-xl font-bold text-slate-400 uppercase italic tracking-tighter">...</span>
+              </div>
+            </div>
+            <!-- Badge ADMIN arriba -->
+              <div id="global-user-role-badge"
+                class="mb-1 px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-indigo-100 flex items-center gap-1.5 w-fit">
+                <i class="fas fa-shield-alt text-[8px]"></i>
+                <span id="global-role-text">Cargando...</span>
+              </div>
+            <i class="fas fa-paw text-indigo-400/30 text-base animate-walking-paws"></i>
+          </div>
+          <p class="text-slate-500 font-bold italic text-[11px] mt-3">
+            Bienvenido a HaruwenWMS. Tu sistema de gestión logística está operativo.
+          </p>
+        </div>
+
+        <!-- Columna Derecha: Logout y Fecha -->
+        <div class="flex flex-col items-center gap-2 relative z-10">
+           <div class="text-right w-full pr-2">
+            <p id="global-current-date" class="text-[15px] font-semibold text-green-600 italic tracking-tighter">
+              Cargando fecha...</p>
+          </div>
+          <button onclick="cerrarSesion()"
+            class="flex items-center gap-3 px-6 py-3 bg-rose-50 text-rose-500 rounded-2xl font-black uppercase italic text-xs border border-rose-100 hover:bg-rose-500 hover:text-white transition-all shadow-sm active:scale-95 group">
+            <i class="fas fa-sign-out-alt group-hover:translate-x-1 transition-transform"></i>
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
     <div id="breadcrumb-container" class="max-w-5xl mx-auto mb-4 px-2"></div>
     <div id="view-container" class="max-w-5xl mx-auto">
       <!-- Contenido inyectado -->

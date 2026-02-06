@@ -298,20 +298,31 @@ function actualizarSaludoHeader() {
     const perfil = window.userProfile;
     if (!perfil) return;
 
-    const greetingEle = document.getElementById("welcome-greeting");
-    const roleBadge = document.getElementById("user-role-badge");
+    const elFirstName = document.getElementById("user-first-name");
+    const elLastName = document.getElementById("user-last-name");
+    const elRole = document.getElementById("global-role-text");
+    const elDate = document.getElementById("global-current-date");
 
-    if (greetingEle) {
-        // Solo aplicar efecto si el elemento está vacío o recién cargado
-        if (greetingEle.innerText.trim() === "" || greetingEle.innerText === "¡Hola!") {
-            const nombre = perfil.nombre ? perfil.nombre.split(' ')[0] : "Usuario";
-            efectoTypewriter(`¡Hola, ${nombre}!`, "welcome-greeting");
+    if (perfil.nombre) {
+        const partes = perfil.nombre.split(' ');
+        const nombre = partes[0] || "";
+        const apellido = partes.slice(1).join(' ') || "";
+
+        if (elFirstName) {
+            if (elFirstName.innerText === "Cargando..." || elFirstName.innerText === "") {
+                efectoTypewriter(nombre, "user-first-name");
+            } else {
+                elFirstName.innerText = nombre;
+            }
         }
+        if (elLastName) elLastName.innerText = apellido;
     }
 
-    if (roleBadge) {
-        const roleSpan = roleBadge.querySelector('span');
-        if (roleSpan) roleSpan.innerText = perfil.rol || "Usuario";
+    if (elRole) elRole.innerText = perfil.rol || "Usuario";
+
+    if (elDate) {
+        const opciones = { weekday: 'long', day: 'numeric', month: 'long' };
+        elDate.innerText = new Date().toLocaleDateString('es-AR', opciones).toUpperCase();
     }
 }
 
