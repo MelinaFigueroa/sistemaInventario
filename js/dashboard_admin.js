@@ -304,8 +304,11 @@ function actualizarBadgeSidebar(count) {
 function renderizarFechaActual() {
     const el = document.getElementById('global-current-date');
     if (el) {
+        const ahora = new Date();
         const opciones = { weekday: 'long', day: 'numeric', month: 'long' };
-        el.innerText = new Date().toLocaleDateString('es-AR', opciones).toUpperCase();
+        const fechaStr = ahora.toLocaleDateString('es-AR', opciones).toUpperCase();
+        const horaStr = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+        el.innerText = `${fechaStr} - ${horaStr}`;
     }
 }
 

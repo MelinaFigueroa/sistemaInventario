@@ -34,11 +34,24 @@ async function checkUser() {
 
     // 2. Actualizar UI General
     USUARIO_ACTUAL = user.email?.split('@')[0] || "Usuario";
-    const elementoGreeting = document.getElementById("user-header-greeting");
-    if (elementoGreeting) {
-        elementoGreeting.innerText = `Bienvenida/o, ${USUARIO_ACTUAL}`;
+
+    // 3. Trigger Modal Bienvenida (Solo si es nueva sesión tras login)
+    if (!sessionStorage.getItem('welcomeModalShown')) {
+        setTimeout(() => {
+            mostrarModalBienvenida(window.userProfile);
+            sessionStorage.setItem('welcomeModalShown', 'true');
+        }, 500);
     }
 }
+
+// Iconos por Rol
+const ROL_ICONS = {
+    'admin': 'crown',
+    'administracion': 'crown',
+    'ventas': 'tags',
+    'deposito': 'box-seam',
+    'invitado': 'user'
+};
 
 async function cargarPerfilUsuario(userId, email) {
     try {
@@ -302,6 +315,10 @@ function actualizarSaludoHeader() {
     const elLastName = document.getElementById("user-last-name");
     const elRole = document.getElementById("global-role-text");
     const elDate = document.getElementById("global-current-date");
+    const elIconMobile = document.getElementById("role-icon-mobile");
+
+    const rolKey = (perfil.rol || 'invitado').toLowerCase();
+    const iconClass = ROL_ICONS[rolKey] || 'user';
 
     if (perfil.nombre) {
         const partes = perfil.nombre.split(' ');
@@ -319,11 +336,63 @@ function actualizarSaludoHeader() {
     }
 
     if (elRole) elRole.innerText = perfil.rol || "Usuario";
+    if (elIconMobile) elIconMobile.className = `fas fa-${iconClass} text-[10px] text-indigo-400 md:hidden`;
 
     if (elDate) {
-        const opciones = { weekday: 'long', day: 'numeric', month: 'long' };
-        elDate.innerText = new Date().toLocaleDateString('es-AR', opciones).toUpperCase();
+        // En mobile (ventana pequeña) mostramos fecha corta y hora
+        const ahora = new Date();
+        const esMobile = window.innerWidth < 768;
+        const opciones = esMobile
+            ? { day: 'numeric', month: 'short' }
+            : { weekday: 'long', day: 'numeric', month: 'long' };
+
+        let fechaStr = ahora.toLocaleDateString('es-AR', opciones).toUpperCase();
+        if (esMobile) fechaStr = fechaStr.replace('.', ''); // Limpiar puntos de abr.
+
+        const horaStr = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+        elDate.innerText = `${fechaStr} - ${horaStr}`;
     }
+}
+
+// ==========================================
+// LÓGICA DEL MODAL DE BIENVENIDA
+// ==========================================
+function mostrarModalBienvenida(perfil) {
+    const modal = document.getElementById('welcome-modal');
+    if (!modal) return;
+
+    const elName = document.getElementById('modal-user-name');
+    const elRole = document.getElementById('modal-user-role');
+    const elIcon = document.getElementById('modal-role-icon-container');
+
+    if (perfil) {
+        if (elName) elName.innerText = `Hola, ${perfil.nombre?.split(' ')[0] || 'Usuario'}`;
+        if (elRole) elRole.innerText = `Acceso ${perfil.rol || 'Usuario'} Pro`;
+
+        const rolKey = (perfil.rol || 'invitado').toLowerCase();
+        const iconClass = ROL_ICONS[rolKey] || 'user';
+        if (elIcon) elIcon.innerHTML = `<i class="fas fa-${iconClass}"></i>`;
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden'; // Bloquear scroll
+}
+
+function cerrarModalBienvenida() {
+    const modal = document.getElementById('welcome-modal');
+    if (!modal) return;
+
+    modal.classList.add('animate-fadeOut');
+    setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+        modal.classList.remove('animate-fadeOut');
+        document.body.style.overflow = ''; // Habilitar scroll
+
+        // Disparar confeti logístico si el navegador lo permite (opcional)
+        FeedbackLogistico.playScannerSuccess();
+    }, 500);
 }
 
 // ==========================================
