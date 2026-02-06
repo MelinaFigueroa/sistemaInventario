@@ -50,18 +50,11 @@ async function cargarPerfilUsuario(userId, email) {
 
         if (error) throw error;
 
-        // Actualizar Card de Usuario
-        const elementoNombre = document.getElementById("user-sidebar-name");
-        const elementoRol = document.querySelector(".text-indigo-400.font-black.uppercase"); // El label de rol en el card
+        // Guardar en caché global para acceso rápido
+        window.userProfile = perfil;
 
-        if (elementoNombre) {
-            // Si el perfil tiene nombre, usarlo, sino el email
-            elementoNombre.innerText = perfil.nombre || email;
-        }
-
-        if (elementoRol) {
-            elementoRol.innerText = perfil.rol || "Usuario";
-        }
+        // Actualizar UI en Vista (Header de Inicio si existe)
+        actualizarSaludoHeader();
 
         // Aplicar restricciones visuales
         aplicarPermisosSidebar(perfil.rol);
@@ -272,3 +265,73 @@ const FeedbackFinanciero = {
         setTimeout(() => bag.remove(), 1100);
     }
 };
+
+// ==========================================
+// CERRAR SESIÓN (Logout Centralizado)
+// ==========================================
+async function cerrarSesion() {
+    try {
+        const { error } = await _supabase.auth.signOut();
+        if (error) throw error;
+
+        // Limpieza de datos locales
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // Redirección con limpieza de historial
+        if (window.location.pathname.includes('/pages/')) {
+            window.location.replace("../index.html");
+        } else {
+            window.location.replace("index.html");
+        }
+
+    } catch (err) {
+        console.error("Error al cerrar sesión:", err);
+        window.location.reload();
+    }
+}
+
+// ==========================================
+// ACTUALIZACIÓN DINÁMICA DE BIENVENIDA
+// ==========================================
+function actualizarSaludoHeader() {
+    const perfil = window.userProfile;
+    if (!perfil) return;
+
+    const greetingEle = document.getElementById("welcome-greeting");
+    const roleBadge = document.getElementById("user-role-badge");
+
+    if (greetingEle) {
+        // Solo aplicar efecto si el elemento está vacío o recién cargado
+        if (greetingEle.innerText.trim() === "" || greetingEle.innerText === "¡Hola!") {
+            const nombre = perfil.nombre ? perfil.nombre.split(' ')[0] : "Usuario";
+            efectoTypewriter(`¡Hola, ${nombre}!`, "welcome-greeting");
+        }
+    }
+
+    if (roleBadge) {
+        const roleSpan = roleBadge.querySelector('span');
+        if (roleSpan) roleSpan.innerText = perfil.rol || "Usuario";
+    }
+}
+
+// ==========================================
+// EFECTO TYPEWRITER (Escritura Dinámica)
+// ==========================================
+function efectoTypewriter(texto, elementoId) {
+    const el = document.getElementById(elementoId);
+    if (!el) return;
+
+    el.innerText = "";
+    let i = 0;
+    const speed = 50;
+
+    function type() {
+        if (i < texto.length) {
+            el.innerText += texto.charAt(i);
+            i++;
+            setTimeout(type, speed);
+        }
+    }
+    type();
+}

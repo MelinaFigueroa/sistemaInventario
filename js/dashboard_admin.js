@@ -12,6 +12,7 @@ async function actualizarDashboard() {
 
     // 2. Cargar Datos Básicos (Comunes)
     renderizarFechaActual();
+    if (typeof actualizarSaludoHeader === 'function') actualizarSaludoHeader();
     await cargarKpisStock();
 
     // 3. Cargar Datos Pro (Admin / Administracion)
