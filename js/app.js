@@ -367,7 +367,7 @@ function actualizarSaludoHeader() {
         elIconMobile.className = `fas fa-${iconClass} text-[14px] text-indigo-400 md:hidden mt-0.5`;
     }
     if (elIconDesktop) {
-        elIconDesktop.className = `fas fa-${iconClass} text-[10px]`;
+        elIconDesktop.className = `fas fa-${iconClass} text-[16px]`;
     }
 
     if (elDate) {
