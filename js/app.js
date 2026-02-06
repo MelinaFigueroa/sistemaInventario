@@ -384,6 +384,10 @@ function mostrarModalBienvenida(perfil) {
     const modal = document.getElementById('welcome-modal');
     if (!modal) return;
 
+    // Ocultar hamburguesa mientras está el modal
+    const hb = document.getElementById('hamburger-btn');
+    if (hb) hb.classList.add('hidden');
+
     const elName = document.getElementById('modal-user-name');
     const elRole = document.getElementById('modal-user-role');
     const elIcon = document.getElementById('modal-role-icon-container');
@@ -400,6 +404,38 @@ function mostrarModalBienvenida(perfil) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     document.body.style.overflow = 'hidden'; // Bloquear scroll
+
+    // Auto-scroll del slider cada 3 segundos
+    let currentPilar = 0;
+    const interval = setInterval(() => {
+        if (!modal.classList.contains('flex')) {
+            clearInterval(interval);
+            return;
+        }
+        currentPilar = (currentPilar + 1) % 3;
+        movePilar(currentPilar);
+    }, 3000);
+}
+
+function movePilar(index) {
+    const slider = document.getElementById('pilar-slider');
+    const dots = document.querySelectorAll('.pilar-dot');
+    if (!slider) return;
+
+    const move = index * -100;
+    if (window.innerWidth < 768) {
+        slider.style.transform = `translateX(${move}%)`;
+    }
+
+    dots.forEach((dot, i) => {
+        if (i === index) {
+            dot.classList.add('bg-indigo-600', 'w-4');
+            dot.classList.remove('bg-indigo-200', 'w-2');
+        } else {
+            dot.classList.add('bg-indigo-200', 'w-2');
+            dot.classList.remove('bg-indigo-600', 'w-4');
+        }
+    });
 }
 
 function cerrarModalBienvenida() {
@@ -412,6 +448,10 @@ function cerrarModalBienvenida() {
         modal.classList.add('hidden');
         modal.classList.remove('animate-fadeOut');
         document.body.style.overflow = ''; // Habilitar scroll
+
+        // Mostrar hamburguesa al cerrar
+        const hb = document.getElementById('hamburger-btn');
+        if (hb) hb.classList.remove('hidden');
 
         // Disparar confeti logístico si el navegador lo permite (opcional)
         FeedbackLogistico.playScannerSuccess();

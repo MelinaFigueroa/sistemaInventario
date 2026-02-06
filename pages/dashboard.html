@@ -343,7 +343,7 @@
 
   <!-- Botón Hamburguesa (Integrado en Header en Mobile) -->
   <button id="hamburger-btn" onclick="toggleSidebar()"
-    class="fixed top-3 left-4 z-[110] p-2.5 text-slate-600 bg-white rounded-xl shadow-lg md:hidden transition-all hover:bg-slate-100 active:scale-95 border border-slate-100">
+    class="fixed top-[18px] left-4 z-[110] p-2.5 text-slate-600 bg-white rounded-xl shadow-lg md:hidden transition-all hover:bg-slate-100 active:scale-95 border border-slate-100 flex items-center justify-center h-10 w-10">
     <i class="fas fa-bars text-lg"></i>
   </button>
 
@@ -354,7 +354,7 @@
 
       <!-- Contenedor adaptativo -->
       <div
-        class="max-w-5xl mx-auto flex items-center justify-between gap-4 md:bg-white md:p-6 md:rounded-[2.5rem] md:shadow-xl md:shadow-slate-200/50 md:border md:border-slate-50 relative h-[60px] md:h-auto px-2 md:px-0">
+        class="max-w-5xl mx-auto flex items-center justify-between gap-4 md:bg-white md:p-6 md:rounded-[2.5rem] md:shadow-xl md:shadow-slate-200/50 md:border md:border-slate-50 relative h-[60px] md:h-auto px-1 md:px-0">
 
         <!-- Decoración (Solo Desktop) -->
         <div
@@ -388,7 +388,7 @@
         </div>
 
         <!-- Derecha: Logout y Fecha -->
-        <div class="flex flex-col md:flex-row items-center md:items-center gap-0.5 md:gap-3 relative z-10">
+        <div class="flex flex-col md:flex-row items-center md:items-center gap-0.5 md:gap-3 relative z-10 pr-2 md:pr-0">
           <!-- Fecha (Compacta en Mobile) -->
           <div class="text-right">
             <p id="global-current-date"
@@ -532,38 +532,52 @@
       </div>
 
       <!-- Cuerpo del Modal -->
-      <div class="p-8 md:p-10 space-y-8">
+      <div class="p-6 md:p-10 space-y-6">
         <div class="text-center">
-          <h3 class="text-2xl font-black text-slate-800 uppercase italic tracking-tighter mb-2">Distribución <span
-              class="text-indigo-600">Inteligente</span></h3>
-          <p class="text-slate-400 font-bold text-xs uppercase italic tracking-widest leading-loose">Tu centro operativo
-            logístico HaruwenWMS está listo.</p>
+          <h3 class="text-xl md:text-2xl font-black text-slate-800 uppercase italic tracking-tighter mb-1">Distribución
+            <span class="text-indigo-600">Inteligente</span>
+          </h3>
+          <p class="text-slate-400 font-bold text-[10px] uppercase italic tracking-widest leading-none">Tu centro
+            operativo
+            logístico HaruwenWMS.</p>
         </div>
 
-        <!-- Los 3 Pilares -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div
-            class="bg-indigo-50/50 p-4 rounded-3xl border border-indigo-100 flex flex-col items-center text-center group hover:bg-indigo-600 hover:text-white transition-all duration-300">
-            <i class="fas fa-rocket text-indigo-500 mb-3 text-xl group-hover:text-white"></i>
-            <h4 class="text-[10px] font-black uppercase tracking-widest mb-1">Misión</h4>
-            <p class="text-[9px] font-bold opacity-70 leading-relaxed italic">Flujo logístico tecnológico trazable.</p>
+        <!-- Carousel de Pilares (Slider en Mobile) -->
+        <div class="relative overflow-hidden list-none">
+          <div id="pilar-slider"
+            class="flex transition-transform duration-500 md:grid md:grid-cols-3 md:gap-4 md:!transform-none">
+            <div
+              class="min-w-full md:min-w-0 bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100 flex flex-col items-center text-center group hover:bg-indigo-600 hover:text-white transition-all duration-300">
+              <i class="fas fa-rocket text-indigo-500 mb-3 text-2xl group-hover:text-white"></i>
+              <h4 class="text-xs font-black uppercase tracking-widest mb-1">Misión</h4>
+              <p class="text-[10px] font-bold opacity-70 leading-relaxed italic">Flujo logístico tecnológico trazable.
+              </p>
+            </div>
+            <div
+              class="min-w-full md:min-w-0 bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100 flex flex-col items-center text-center group hover:bg-indigo-600 hover:text-white transition-all duration-300">
+              <i class="fas fa-eye text-indigo-500 mb-3 text-2xl group-hover:text-white"></i>
+              <h4 class="text-xs font-black uppercase tracking-widest mb-1">Visión</h4>
+              <p class="text-[10px] font-bold opacity-70 leading-relaxed italic">Estándar digital para Vital Can.</p>
+            </div>
+            <div
+              class="min-w-full md:min-w-0 bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100 flex flex-col items-center text-center group hover:bg-indigo-600 hover:text-white transition-all duration-300">
+              <i class="fas fa-heart text-indigo-500 mb-3 text-2xl group-hover:text-white"></i>
+              <h4 class="text-xs font-black uppercase tracking-widest mb-1">Valores</h4>
+              <p class="text-[10px] font-bold opacity-70 leading-relaxed italic">Pasión por la eficiencia animal.</p>
+            </div>
           </div>
-          <div
-            class="bg-indigo-50/50 p-4 rounded-3xl border border-indigo-100 flex flex-col items-center text-center group hover:bg-indigo-600 hover:text-white transition-all duration-300">
-            <i class="fas fa-eye text-indigo-500 mb-3 text-xl group-hover:text-white"></i>
-            <h4 class="text-[10px] font-black uppercase tracking-widest mb-1">Visión</h4>
-            <p class="text-[9px] font-bold opacity-70 leading-relaxed italic">Estándar digital para Vital Can.</p>
-          </div>
-          <div
-            class="bg-indigo-50/50 p-4 rounded-3xl border border-indigo-100 flex flex-col items-center text-center group hover:bg-indigo-600 hover:text-white transition-all duration-300">
-            <i class="fas fa-heart text-indigo-500 mb-3 text-xl group-hover:text-white"></i>
-            <h4 class="text-[10px] font-black uppercase tracking-widest mb-1">Valores</h4>
-            <p class="text-[9px] font-bold opacity-70 leading-relaxed italic">Pasión por la eficiencia animal.</p>
+
+          <!-- Indicadores del Slider (Solo Mobile) -->
+          <div class="flex justify-center gap-2 mt-4 md:hidden">
+            <button onclick="movePilar(0)" class="w-2 h-2 rounded-full bg-indigo-200 pilar-dot active-dot"
+              id="dot-0"></button>
+            <button onclick="movePilar(1)" class="w-2 h-2 rounded-full bg-indigo-200 pilar-dot" id="dot-1"></button>
+            <button onclick="movePilar(2)" class="w-2 h-2 rounded-full bg-indigo-200 pilar-dot" id="dot-2"></button>
           </div>
         </div>
 
         <button onclick="cerrarModalBienvenida()"
-          class="w-full bg-slate-900 text-white py-5 rounded-[2rem] font-black uppercase italic tracking-[0.2em] shadow-xl hover:bg-indigo-600 active:scale-[0.98] transition-all">
+          class="w-full bg-emerald-500 text-white py-4 rounded-[1.5rem] font-black uppercase italic tracking-[0.2em] shadow-lg shadow-emerald-100 hover:bg-emerald-600 active:scale-[0.98] transition-all">
           Comenzar a Operar
         </button>
       </div>
