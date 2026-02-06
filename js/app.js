@@ -47,9 +47,9 @@ async function checkUser() {
 // Iconos por Rol
 const ROL_ICONS = {
     'admin': 'crown',
-    'administracion': 'crown',
-    'ventas': 'tags',
-    'deposito': 'box-seam',
+    'administracion': 'user-shield',
+    'ventas': 'file-invoice-dollar',
+    'deposito': 'truck-loading',
     'invitado': 'user'
 };
 
@@ -87,7 +87,7 @@ function aplicarPermisosSidebar(rol) {
 
     const menuIds = [
         'menu-dashboard', 'menu-consulta', 'menu-pedidos',
-        'menu-facturacion', 'menu-clientes', 'menu-recepcion',
+        'menu-facturacion', 'menu-cobranzas', 'menu-clientes', 'menu-recepcion',
         'menu-posiciones', 'menu-inventario', 'menu-movimientos'
     ];
 

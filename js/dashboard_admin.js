@@ -48,7 +48,15 @@ function configurarVisibilidadSegunRol(rol) {
             if (elEficiencia) elEficiencia.classList.add('hidden');
         }
         if (adminFeed) adminFeed.classList.remove('hidden');
-        if (warehouseKPIs) warehouseKPIs.classList.add('hidden');
+
+        // Ventas no debe ver movimientos de stock, solo ventas
+        if (warehouseKPIs) {
+            warehouseKPIs.classList.remove('hidden'); // Para ver Bolsas en Stock
+            // Pero ocultamos el feed de movimientos
+            const elMovimientosCard = document.getElementById('kpi-movimientos-hoy')?.closest('.bg-white');
+            if (elMovimientosCard) elMovimientosCard.classList.add('hidden');
+        }
+
         if (accountingCard) accountingCard.classList.add('hidden');
         if (btnRecepcion) btnRecepcion.classList.add('hidden');
         if (btnCobranza) btnCobranza.classList.remove('hidden');
