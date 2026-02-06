@@ -29,18 +29,37 @@ async function actualizarDashboard() {
 function configurarVisibilidadSegunRol(rol) {
     const adminKPIs = document.getElementById('admin-kpis');
     const adminFeed = document.getElementById('admin-feed');
-    const warehouseKPIs = document.getElementById('warehouse-kpis');
+    const accountingCard = document.getElementById('admin-accounting-card');
+    const btnRecepcion = document.getElementById('btn-quick-recepcion');
+    const btnCobranza = document.getElementById('btn-quick-cobranza');
 
     if (rol === 'admin' || rol === 'administracion') {
         if (adminKPIs) adminKPIs.classList.remove('hidden');
         if (adminFeed) adminFeed.classList.remove('hidden');
-        const accountingCard = document.getElementById('admin-accounting-card');
+        if (warehouseKPIs) warehouseKPIs.classList.remove('hidden');
         if (accountingCard) accountingCard.classList.remove('hidden');
-        // El dashboard admin es más completo
+        if (btnRecepcion) btnRecepcion.classList.remove('hidden');
+        if (btnCobranza) btnCobranza.classList.remove('hidden');
+    } else if (rol === 'ventas') {
+        // Ventas: Ve métricas de dinero pero no de bodega
+        if (adminKPIs) {
+            adminKPIs.classList.remove('hidden');
+            const elEficiencia = document.getElementById('kpi-eficiencia')?.closest('div');
+            if (elEficiencia) elEficiencia.classList.add('hidden');
+        }
+        if (adminFeed) adminFeed.classList.remove('hidden');
+        if (warehouseKPIs) warehouseKPIs.classList.add('hidden');
+        if (accountingCard) accountingCard.classList.add('hidden');
+        if (btnRecepcion) btnRecepcion.classList.add('hidden');
+        if (btnCobranza) btnCobranza.classList.remove('hidden');
     } else {
-        // Modo Depósito: Ocultamos finanzas
+        // Por defecto o Depósito: Ocultamos finanzas
         if (adminKPIs) adminKPIs.classList.add('hidden');
         if (adminFeed) adminFeed.classList.add('hidden');
+        if (warehouseKPIs) warehouseKPIs.classList.remove('hidden');
+        if (accountingCard) accountingCard.classList.add('hidden');
+        if (btnRecepcion) btnRecepcion.classList.remove('hidden');
+        if (btnCobranza) btnCobranza.classList.add('hidden');
     }
 }
 

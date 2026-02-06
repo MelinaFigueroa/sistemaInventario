@@ -84,27 +84,34 @@ function mostrarResultadosConsulta(prod) {
 
     // Ubicaciones Detalladas por Lote
     const posContainer = document.getElementById("consulta-posiciones");
+    const containerUbicaciones = document.getElementById("container-ubicaciones");
 
-    if (lotesActivos.length === 0) {
-        posContainer.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-4">Sin lotes activos registrados.</p>';
+    if (window.currentUserRole === 'ventas') {
+        if (containerUbicaciones) containerUbicaciones.classList.add("hidden");
     } else {
-        posContainer.innerHTML = lotesActivos.map(l => `
-            <div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-200 transition-colors">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg font-black text-xs italic">
-                        ${l.posicion_id || '--'}
+        if (containerUbicaciones) containerUbicaciones.classList.remove("hidden");
+
+        if (lotesActivos.length === 0) {
+            posContainer.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-4">Sin lotes activos registrados.</p>';
+        } else {
+            posContainer.innerHTML = lotesActivos.map(l => `
+                <div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-200 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg font-black text-xs italic">
+                            ${l.posicion_id || '--'}
+                        </div>
+                        <div>
+                            <p class="font-black text-slate-800 uppercase italic text-sm">Lote: ${l.numero_lote}</p>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase">Vence: ${new Date(l.vencimiento).toLocaleDateString()}</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="font-black text-slate-800 uppercase italic text-sm">Lote: ${l.numero_lote}</p>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase">Vence: ${new Date(l.vencimiento).toLocaleDateString()}</p>
+                    <div class="text-right">
+                        <p class="font-black text-indigo-600">${l.cantidad_actual} u.</p>
+                        <p class="text-[9px] font-bold text-slate-500 uppercase italic">Stock Lote</p>
                     </div>
                 </div>
-                <div class="text-right">
-                    <p class="font-black text-indigo-600">${l.cantidad_actual} u.</p>
-                    <p class="text-[9px] font-bold text-slate-500 uppercase italic">Stock Lote</p>
-                </div>
-            </div>
-        `).join("");
+            `).join("");
+        }
     }
 
     // Alternar visibilidad

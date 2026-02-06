@@ -113,13 +113,36 @@ function aplicarPermisosSidebar(rol) {
 function tienePermiso(idOMenu) {
     const rol = window.currentUserRole;
 
-    // Mapeo unificado: ID de Menú -> Página HTML relacionada
     const permisos = {
-        'admin': ['*'], // Comodín para todo
-        'administracion': ['menu-dashboard', 'menu-consulta', 'menu-pedidos', 'menu-facturacion', 'menu-cobranzas', 'menu-clientes', 'menu-inventario', 'menu-movimientos', 'inicio.html', 'consulta.html', 'pedidos.html', 'facturacion.html', 'cobranzas.html', 'clientes.html', 'inventario.html', 'movimientos.html'],
-        'ventas': ['menu-dashboard', 'menu-consulta', 'menu-pedidos', 'menu-cobranzas', 'menu-clientes', 'menu-inventario', 'inicio.html', 'consulta.html', 'pedidos.html', 'cobranzas.html', 'clientes.html', 'inventario.html'],
-        'deposito': ['menu-dashboard', 'menu-consulta', 'menu-pedidos', 'menu-recepcion', 'menu-posiciones', 'menu-inventario', 'menu-movimientos', 'inicio.html', 'consulta.html', 'pedidos.html', 'recepcion.html', 'posiciones.html', 'inventario.html', 'movimientos.html'],
-        'invitado': ['menu-dashboard', 'menu-consulta', 'inicio.html', 'consulta.html']
+        'admin': ['*'],
+        'administracion': [
+            'menu-dashboard', 'inicio.html',
+            'menu-consulta', 'consulta.html',
+            'menu-pedidos', 'pedidos.html',
+            'menu-facturacion', 'facturacion.html',
+            'menu-cobranzas', 'cobranzas.html',
+            'menu-clientes', 'clientes.html',
+            'menu-inventario', 'inventario.html',
+            'menu-movimientos', 'movimientos.html'
+        ],
+        'ventas': [
+            'menu-dashboard', 'inicio.html',
+            'menu-consulta', 'consulta.html',
+            'menu-pedidos', 'pedidos.html',
+            'menu-facturacion', 'facturacion.html',
+            'menu-cobranzas', 'cobranzas.html',
+            'menu-clientes', 'clientes.html'
+        ],
+        'deposito': [
+            'menu-dashboard', 'inicio.html',
+            'menu-consulta', 'consulta.html',
+            'menu-pedidos', 'pedidos.html',
+            'menu-recepcion', 'recepcion.html',
+            'menu-posiciones', 'posiciones.html',
+            'menu-inventario', 'inventario.html',
+            'menu-movimientos', 'movimientos.html'
+        ],
+        'invitado': ['menu-dashboard', 'inicio.html', 'menu-consulta', 'consulta.html']
     };
 
     const misAccesos = permisos[rol] || permisos['invitado'];
