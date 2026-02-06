@@ -30,8 +30,8 @@ async function loadPage(pageUrl, saveHistory = true) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(content, "text/html");
 
-        // Inyectar contenido
-        container.innerHTML = doc.querySelector("main") ? doc.querySelector("main").innerHTML : content;
+        // Inyectar contenido con animación moderna
+        container.innerHTML = `<div class="animate-fade-up transform-gpu">${doc.querySelector("main") ? doc.querySelector("main").innerHTML : content}</div>`;
 
         // 1. Manejo de Historial (Browser Support)
         if (saveHistory) {

@@ -414,7 +414,7 @@ function escanearProductoPicking() {
         if (itemIndex !== -1) {
             validacionActual.itemsRestantes[itemIndex].escaneados++;
             validacionActual.itemsEscaneados.push(skuEscaneado);
-            Notificar.toast("Producto validado correctamente", "success");
+            if (typeof FeedbackLogistico !== 'undefined') FeedbackLogistico.playScannerSuccess();
             renderizarValidador();
         } else {
             const pertenece = validacionActual.itemsRestantes.find(i => i.productos.sku === skuEscaneado);
@@ -423,6 +423,7 @@ function escanearProductoPicking() {
             } else {
                 Notificar.error("¡ALERTA ROJA!", `El SKU ${skuEscaneado} no pertenece a este pedido.`);
             }
+            if (typeof FeedbackLogistico !== 'undefined') FeedbackLogistico.playErrorFEFO('checklist-picking');
             renderizarValidador();
         }
     });
@@ -578,6 +579,8 @@ async function procesarPicking(pedidoId) {
             icon: 'success',
             confirmButtonColor: '#4f46e5'
         });
+
+        if (typeof FeedbackFinanciero !== 'undefined') FeedbackFinanciero.animarVueloBolsa();
 
         renderPedidos();
         if (typeof renderFacturacion === "function") renderFacturacion();

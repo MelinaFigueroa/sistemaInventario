@@ -1,8 +1,11 @@
 <main class="max-w-5xl mx-auto p-4 md:p-6 animate-fadeIn">
     <header class="mb-8 flex justify-between items-center sm:flex-row flex-col gap-4">
         <div>
-            <h2 id="dashboard-title" class="text-2xl font-black text-slate-800 italic uppercase tracking-tighter">Panel
-                de Control</h2>
+            <h2 id="dashboard-title"
+                class="text-2xl font-black text-slate-800 italic uppercase tracking-tighter flex items-center gap-3">
+                Panel de Control
+                <i class="fas fa-paw text-indigo-400/50 text-base animate-walking-paws"></i>
+            </h2>
             <p id="dashboard-subtitle" class="text-slate-500 font-bold">Resumen de operaciones Vital Can</p>
         </div>
         <div id="dashboard-date" class="text-right">
@@ -11,9 +14,54 @@
         </div>
     </header>
 
+    <!-- Sección Institucional: Misión y Visión (Glassmorphism) -->
+    <section class="mb-10 animate-fade-up delay-100 transform-gpu">
+        <div
+            class="glass p-8 rounded-[3rem] shadow-2xl shadow-indigo-100/20 relative overflow-hidden border border-white/40">
+            <div class="absolute -right-20 -bottom-20 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl"></div>
+            <div class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-tighter uppercase italic leading-tight mb-4">
+                        Distribución <span class="text-indigo-600 font-black">Inteligente</span>
+                    </h2>
+                    <div class="space-y-4">
+                        <div class="bg-white/40 p-4 rounded-2xl border border-white/60">
+                            <h4
+                                class="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                <i class="fas fa-rocket"></i> Misión
+                            </h4>
+                            <p class="text-[11px] text-slate-600 font-bold italic leading-relaxed">
+                                "Optimizar el flujo logístico y financiero de la distribución mediante tecnología
+                                inteligente, garantizando que cada bulto llegue a destino y cada peso sea trazable en
+                                tiempo real."
+                            </p>
+                        </div>
+                        <div class="bg-white/40 p-4 rounded-2xl border border-white/60">
+                            <h4
+                                class="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                <i class="fas fa-eye"></i> Visión
+                            </h4>
+                            <p class="text-[11px] text-slate-600 font-bold italic leading-relaxed">
+                                "Convertirnos en el estándar de gestión para distribuidoras de Vital Can, liderando la
+                                transformación digital desde el depósito hasta la administración."
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="hidden md:flex justify-end pr-8">
+                    <div
+                        class="w-40 h-40 bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-[3rem] flex items-center justify-center text-white shadow-2xl shadow-indigo-200 rotate-6 hover:rotate-0 transition-transform duration-500 group cursor-pointer">
+                        <i class="fas fa-warehouse text-6xl group-hover:scale-110 transition-transform"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- KPI Section: Ventas, Cobranzas y Eficiencia (Admin Only) -->
     <div id="admin-kpis" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 hidden">
-        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 border-b-4 border-b-emerald-500">
+        <div
+            class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 border-b-4 border-b-emerald-500 animate-fade-up delay-200 transform-gpu">
             <div class="flex justify-between items-start mb-4">
                 <div class="p-3 bg-emerald-50 rounded-2xl text-emerald-600">
                     <i class="fas fa-coins text-xl"></i>
@@ -21,11 +69,11 @@
                 <span class="text-[10px] font-black text-emerald-500 uppercase italic">Hoy</span>
             </div>
             <p class="text-slate-400 text-[10px] font-black uppercase tracking-wider italic">Ventas del Día</p>
-            <p id="kpi-ventas-hoy" class="text-2xl font-black text-slate-800 mt-1">$ 0,00</p>
+            <p id="kpi-ventas-hoy" class="text-2xl font-black text-slate-800 mt-1 count-up">$ 0,00</p>
         </div>
 
         <div onclick="loadPage('facturacion.html')"
-            class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 border-b-4 border-b-rose-500 cursor-pointer hover:scale-[1.02] transition-all">
+            class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 border-b-4 border-b-rose-500 cursor-pointer hover:scale-[1.02] transition-all animate-fade-up delay-300 transform-gpu">
             <div class="flex justify-between items-start mb-4">
                 <div class="p-3 bg-rose-50 rounded-2xl text-rose-600 relative">
                     <i class="fas fa-receipt text-xl"></i>
@@ -35,10 +83,11 @@
                 <span class="text-[10px] font-black text-rose-500 uppercase italic">Pendientes</span>
             </div>
             <p class="text-slate-400 text-[10px] font-black uppercase tracking-wider italic">Cobranzas a Validar</p>
-            <p id="kpi-cobranzas-pendientes" class="text-2xl font-black text-slate-800 mt-1">0</p>
+            <p id="kpi-cobranzas-pendientes" class="text-2xl font-black text-slate-800 mt-1 count-up">0</p>
         </div>
 
-        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 border-b-4 border-b-indigo-500">
+        <div
+            class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 border-b-4 border-b-indigo-500 animate-fade-up delay-400 transform-gpu">
             <div class="flex justify-between items-start mb-4">
                 <div class="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
                     <i class="fas fa-dolly text-xl"></i>
@@ -46,7 +95,7 @@
                 <span id="efficiency-percent" class="text-[10px] font-black text-indigo-500 uppercase italic">0%</span>
             </div>
             <p class="text-slate-400 text-[10px] font-black uppercase tracking-wider italic">Eficiencia de Depósito</p>
-            <p id="kpi-eficiencia" class="text-2xl font-black text-slate-800 mt-1">0 / 0 <span
+            <p id="kpi-eficiencia" class="text-2xl font-black text-slate-800 mt-1 tracking-tighter">0 / 0 <span
                     class="text-xs text-slate-400 font-bold">Peds.</span></p>
         </div>
     </div>

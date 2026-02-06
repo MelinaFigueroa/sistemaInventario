@@ -128,10 +128,7 @@ function activarEscanerRecepcion() {
         }
 
         if (encontrado) {
-            Notificar.toast("Producto identificado!", "success");
-            // Dar feedback visual
-            selectProd.classList.add("ring-4", "ring-indigo-500");
-            setTimeout(() => selectProd.classList.remove("ring-4", "ring-indigo-500"), 1500);
+            if (typeof FeedbackLogistico !== 'undefined') FeedbackLogistico.playScannerSuccess();
         } else {
             Notificar.error("CÓDIGO NO RECONOCIDO", `No se encontró un producto con SKU: ${codigo}`);
         }
@@ -168,9 +165,7 @@ function activarEscanerRack() {
         }
 
         if (encontrado) {
-            Notificar.toast("Ubicación confirmada!", "success");
-            selectDest.classList.add("ring-4", "ring-indigo-500");
-            setTimeout(() => selectDest.classList.remove("ring-4", "ring-indigo-500"), 1500);
+            if (typeof FeedbackLogistico !== 'undefined') FeedbackLogistico.playScannerSuccess();
         } else {
             Notificar.error("RACK NO ENCONTRADO", `No se existe la ubicación: ${codigoLimpio}`);
         }

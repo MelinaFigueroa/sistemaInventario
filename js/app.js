@@ -98,7 +98,7 @@ function aplicarPermisosSidebar(rol) {
 
     // Forzar renderizado inicial si el dashboard está vacío
     const container = document.getElementById('view-container');
-    if (container && container.innerHTML.includes('fa-paw')) {
+    if (container && container.innerText.trim().length === 0) {
         loadPage('inicio.html');
     }
 }
@@ -194,9 +194,81 @@ function formatearMoneda(monto) {
     }).format(monto);
 }
 
-// Log de debug (solo en desarrollo)
-function debug(mensaje, datos = null) {
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        console.log(`[DEBUG] ${mensaje}`, datos || '');
+// ==========================================
+// MOTOR DE MICRO-ANIMACIONES Y FEEDBACK (Logística de Alta Gama)
+// ==========================================
+
+const FeedbackLogistico = {
+    /**
+     * Éxito en Escaneo: Brillo verde y check animado
+     */
+    playScannerSuccess: () => {
+        // Overlay de pulso verde
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center border-[20px] border-emerald-500/30 animate-pulse';
+        overlay.innerHTML = `
+            <div class="bg-emerald-500 text-white w-24 h-24 rounded-full flex items-center justify-center shadow-2xl animate-fade-up">
+                <i class="fas fa-check text-5xl"></i>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        // La Patitita "Cute" (Efecto Sello)
+        const paw = document.createElement('div');
+        paw.className = 'fixed z-[10000] pointer-events-none text-emerald-600/40 animate-paw';
+        paw.style.left = (Math.random() * 40 + 30) + '%';
+        paw.style.top = (Math.random() * 40 + 30) + '%';
+        paw.innerHTML = `<i class="fas fa-paw text-8xl"></i>`;
+        document.body.appendChild(paw);
+
+        setTimeout(() => {
+            overlay.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+            setTimeout(() => { overlay.remove(); paw.remove(); }, 500);
+        }, 800);
+    },
+
+    /**
+     * Error FEFO: Vibración roja (Shake)
+     */
+    playErrorFEFO: (targetId) => {
+        const el = document.getElementById(targetId);
+        if (el) {
+            el.classList.add('animate-shake', 'ring-4', 'ring-rose-500', 'border-rose-500');
+            setTimeout(() => el.classList.remove('animate-shake', 'ring-4', 'ring-rose-500', 'border-rose-500'), 1000);
+        }
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
     }
-}
+};
+
+const FeedbackFinanciero = {
+    /**
+     * Vuelo de Bolsa: Simula el movimiento de mercadería al depósito
+     */
+    animarVueloBolsa: () => {
+        const bag = document.createElement('div');
+        bag.innerHTML = `
+            <div class="relative w-16 h-16 bg-white rounded-2xl shadow-2xl border border-indigo-100 flex items-center justify-center overflow-hidden">
+                <i class="fas fa-box text-indigo-600 text-3xl"></i>
+                <div class="absolute inset-0 bg-indigo-500/10 animate-pulse"></div>
+            </div>
+        `;
+        bag.className = 'fixed z-[10000] pointer-events-none transform-gpu transition-all duration-1000 ease-in-out';
+        bag.style.left = '50%';
+        bag.style.top = '50%';
+        bag.style.transform = 'translate(-50%, -50%) scale(2)';
+        document.body.appendChild(bag);
+
+        // Retardo para iniciar vuelo
+        setTimeout(() => {
+            const target = document.getElementById('menu-movimientos');
+            const rect = target ? target.getBoundingClientRect() : { top: 0, left: 0 };
+
+            bag.style.left = (rect.left + 24) + 'px';
+            bag.style.top = (rect.top + 24) + 'px';
+            bag.style.transform = 'translate(0, 0) scale(0.2) rotate(720deg)';
+            bag.style.opacity = '0';
+        }, 100);
+
+        setTimeout(() => bag.remove(), 1100);
+    }
+};

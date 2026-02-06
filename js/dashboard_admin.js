@@ -44,32 +44,33 @@ function configurarVisibilidadSegunRol(rol) {
 }
 
 /**
- * KPIS FINANCIEROS: Ventas Hoy y Pagos Pendientes
+ * KPIS FINANCIEROS: Ventas Hoy y Pagos Pendientes con Animaciones
  */
 async function cargarKpisFinancieros() {
     try {
         const hoy = new Date().toISOString().split('T')[0];
 
-        // Ventas del Día (Facturadas hoy) - Usamos created_at de la tabla facturas o pedidos
-        const { data: facturasHoy } = await _supabase
-            .from('facturas')
-            .select('total_final')
-            .gte('created_at', hoy);
-
+        // Ventas del Día
+        const { data: facturasHoy } = await _supabase.from('facturas').select('total_final').gte('created_at', hoy);
         const totalVentas = facturasHoy?.reduce((acc, f) => acc + (f.total_final || 0), 0) || 0;
+
         const elVentas = document.getElementById('kpi-ventas-hoy');
-        if (elVentas) elVentas.innerText = formatearMoneda(totalVentas);
+        if (elVentas) {
+            const valorAnterior = parseFloat(elVentas.innerText.replace(/[^0-9.-]+/g, "")) || 0;
+            animarValor('kpi-ventas-hoy', valorAnterior, totalVentas, true);
+            if (totalVentas > valorAnterior) elVentas.parentElement.classList.add('pulse-success');
+            setTimeout(() => elVentas.parentElement.classList.remove('pulse-success'), 2000);
+        }
 
-        // Pagos a Validar (Estado = Pendiente)
-        const { data: pagosPendientes, count } = await _supabase
-            .from('pagos')
-            .select('id', { count: 'exact' })
-            .eq('estado', 'pendiente');
-
+        // Pagos a Validar
+        const { count } = await _supabase.from('pagos').select('id', { count: 'exact' }).eq('estado', 'pendiente');
         const elPagosCount = document.getElementById('kpi-cobranzas-pendientes');
-        if (elPagosCount) elPagosCount.innerText = count || 0;
+        if (elPagosCount) {
+            const countAnterior = parseInt(elPagosCount.innerText) || 0;
+            animarValor('kpi-cobranzas-pendientes', countAnterior, count || 0, false);
+        }
 
-        // Eficiencia (Entregados vs Pendientes hoy)
+        // Eficiencia
         const { data: pedidosStats } = await _supabase.from('pedidos').select('estado');
         const entregados = pedidosStats?.filter(p => p.estado === 'entregado').length || 0;
         const total = pedidosStats?.length || 0;
@@ -80,12 +81,35 @@ async function cargarKpisFinancieros() {
         if (elEficiencia) elEficiencia.innerText = `${entregados} / ${total} Peds.`;
         if (elPercent) elPercent.innerText = `${eficiencia}%`;
 
-        // Actualizar Badge en Sidebar
         actualizarBadgeSidebar(count);
+    } catch (err) { console.error("Error en KPIs Financieros:", err); }
+}
 
-    } catch (err) {
-        console.error("Error en KPIs Financieros:", err);
+/**
+ * ANIMACIÓN DE CONTADOR NUMÉRICO
+ */
+function animarValor(id, inicio, fin, esMoneda = false) {
+    const obj = document.getElementById(id);
+    if (!obj) return;
+    if (inicio === fin) return;
+
+    let start = null;
+    const duracion = 800;
+
+    function step(timestamp) {
+        if (!start) start = timestamp;
+        const progreso = Math.min((timestamp - start) / duracion, 1);
+        const valorActual = progreso * (fin - inicio) + inicio;
+
+        obj.innerText = esMoneda ? formatearMoneda(valorActual) : Math.floor(valorActual);
+
+        if (progreso < 1) {
+            window.requestAnimationFrame(step);
+        } else {
+            obj.innerText = esMoneda ? formatearMoneda(fin) : fin;
+        }
     }
+    window.requestAnimationFrame(step);
 }
 
 /**

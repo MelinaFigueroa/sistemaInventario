@@ -15,47 +15,176 @@
   <link rel="apple-touch-icon" href="../icons/icon-192x192.png">
 
   <title>HaruwenWMS - Panel de Control</title>
+
+  <!-- Estilos e Iconografía -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode"></script>
-
-  <!-- Core: Configuración y variables globales -->
-  <script src="../js/config.js"></script>
-
-  <!-- Router: Sistema de navegación SPA -->
-  <script src="../js/router.js"></script>
-
-  <!-- Módulos de funcionalidad -->
-  <script src="../js/renders.js"></script>
-  <script src="../js/ui.js"></script>
-  <script src="../js/pedidos.js"></script>
-  <script src="../js/recepcion.js"></script>
-  <script src="../js/movimientos.js"></script>
-  <script src="../js/clientes.js"></script>
-
-  <script>
-    // Inicialización Síncrona de Seguridad
-    window.onload = async () => {
-      await checkUser(); // Verificamos sesión y cargamos Rol
-      loadPage('inicio.html'); // Cargamos vista inicial
-    };
-  </script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- CSS Móvil Optimizado -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Outfit:wght@400;700;900&family=Roboto:ital,wght@0,400;0,700;1,900&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="../css/mobile.css">
 
   <style>
-    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap");
+    :root {
+      --font-main: 'Inter', sans-serif;
+      --font-title: 'Outfit', sans-serif;
+    }
 
     body {
-      font-family: "Inter", sans-serif;
+      font-family: var(--font-main);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    .font-title {
+      font-family: var(--font-title);
+    }
+
+    /* GPU Acceleration & Performance */
+    .will-change-transform {
+      will-change: transform, opacity;
+    }
+
+    .transform-gpu {
+      transform: translate3d(0, 0, 0);
+    }
+
+    /* Modern Animations */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-up {
+      animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20%,
+      60% {
+        transform: translateX(-4px);
+      }
+
+      40%,
+      80% {
+        transform: translateX(4px);
+      }
+    }
+
+    .animate-shake {
+      animation: shake 0.4s ease-in-out;
+    }
+
+    @keyframes pulseSuccess {
+      0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+      }
+
+      70% {
+        box-shadow: 0 0 0 15px rgba(16, 185, 129, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+      }
+    }
+
+    .pulse-success {
+      animation: pulseSuccess 2s infinite;
+    }
+
+    /* Staggered load delays */
+    .delay-100 {
+      animation-delay: 100ms;
+    }
+
+    .delay-200 {
+      animation-delay: 200ms;
+    }
+
+    .delay-300 {
+      animation-delay: 300ms;
+    }
+
+    .delay-400 {
+      animation-delay: 400ms;
+    }
+
+    .delay-500 {
+      animation-delay: 500ms;
+    }
+
+    /* Number Counter Animation */
+    .count-up {
+      transition: all 0.5s ease-out;
+    }
+
+    /* Cute Animal Animations (Vital Can Branding) */
+    @keyframes pawStamp {
+      0% {
+        opacity: 0;
+        transform: scale(3) rotate(-20deg);
+        filter: blur(10px);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+        filter: blur(0);
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(0.8) translateY(-20px);
+      }
+    }
+
+    .animate-paw {
+      animation: pawStamp 1s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards;
+    }
+
+    @keyframes pawsWalking {
+      0% {
+        transform: translateX(-10px) rotate(-10deg);
+        opacity: 0.3;
+      }
+
+      50% {
+        transform: translateX(0) rotate(10deg);
+        opacity: 0.8;
+      }
+
+      100% {
+        transform: translateX(10px) rotate(-10deg);
+        opacity: 0.3;
+      }
+    }
+
+    .animate-walking-paws {
+      animation: pawsWalking 2s infinite ease-in-out;
+    }
+
+    /* Glassmorphism Classes */
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
     .animate-fadeIn {
@@ -72,6 +201,35 @@
       }
     }
   </style>
+
+  <!-- Librerías Externas -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <!-- Core Scripts -->
+  <script src="../js/config.js"></script>
+  <script src="../js/router.js"></script>
+  <script src="../js/renders.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/pedidos.js"></script>
+  <script src="../js/recepcion.js"></script>
+  <script src="../js/movimientos.js"></script>
+  <script src="../js/clientes.js"></script>
+  <script>
+    // Inicialización de Seguridad y Carga de Vista Inicial
+    window.onload = async () => {
+      if (typeof checkUser === 'function') {
+        await checkUser();
+        // Solo cargamos inicio.html si el contenedor está vacío para evitar recargas dobles
+        const container = document.getElementById('view-container');
+        if (container && container.innerText.trim().length === 0) {
+          loadPage('inicio.html');
+        }
+      }
+    };
+  </script>
 </head>
 
 <body class="bg-slate-100 min-h-screen">
@@ -129,14 +287,14 @@
         </li>
         <li id="menu-recepcion">
           <button onclick="loadPage('recepcion.html')"
-            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-all group text-left text-emerald-400">
-            <i class="fas fa-download w-6 group-hover:scale-110 transition-transform"></i>
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-all group text-left text-emerald-500">
+            <i class="fas fa-truck-ramp-box w-6 group-hover:scale-110 transition-transform"></i>
             <span class="ml-3 font-black uppercase italic tracking-widest text-xs">Recepción</span>
           </button>
         </li>
         <li id="menu-posiciones">
           <button onclick="loadPage('posiciones.html')"
-            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-all group text-left text-violet-400">
+            class="w-full flex items-center p-3 hover:bg-slate-800 rounded-xl transition-all group text-left text-indigo-400">
             <i class="fas fa-map-location-dot w-6 group-hover:scale-110 transition-transform"></i>
             <span class="ml-3 font-black uppercase italic tracking-widest text-xs">Posiciones</span>
           </button>
@@ -158,7 +316,6 @@
       </ul>
 
       <div class="pt-6 border-t border-slate-800 mt-2">
-        <!-- Card de Usuario Rediseñada -->
         <div class="bg-slate-800/40 rounded-2xl p-4 mb-4 border border-slate-700/50 backdrop-blur-sm">
           <div class="flex items-center gap-3">
             <div id="user-sidebar-initial"
@@ -190,176 +347,116 @@
     </div>
   </aside>
 
-
-  <!-- Overlay oscuro para cerrar sidebar en móvil -->
   <div id="sidebar-overlay" onclick="closeSidebar()"
     class="fixed inset-0 bg-black/50 z-30 hidden md:hidden backdrop-blur-sm transition-opacity">
   </div>
 
-  <!-- Botón hamburguesa - se oculta cuando sidebar está abierto -->
   <button id="hamburger-btn" onclick="toggleSidebar()"
     class="fixed top-4 left-4 z-50 p-3 text-slate-600 bg-white rounded-xl shadow-lg md:hidden transition-all hover:bg-slate-100 active:scale-95">
     <i class="fas fa-bars text-lg"></i>
   </button>
 
   <main id="main-content" class="p-4 md:ml-64 min-h-screen">
-    <!-- Navegación: Breadcrumbs Dinámicos -->
     <div id="breadcrumb-container" class="max-w-5xl mx-auto mb-4 px-2"></div>
-
     <div id="view-container" class="max-w-5xl mx-auto">
-      <header class="flex justify-between items-center mb-8 mt-12 md:mt-0">
-        <div>
-          <h2 id="user-header-greeting" class="text-2xl font-bold text-slate-800 italic">
-            Bienvenida/o
-          </h2>
-          <p class="text-slate-500">
-            Estado actual del depósito en Río Grande
-          </p>
-        </div>
-        <div class="hidden md:block text-right text-slate-400">
-          <p class="text-sm font-bold text-slate-800">TDF, Argentina</p>
-          <p class="text-xs font-bold">03 de Febrero, 2026</p>
-        </div>
-      </header>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 border-b-4 border-b-indigo-500">
-          <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">
-            Stock Total
-          </p>
-          <p class="text-3xl font-black text-slate-800 mt-1">
-            1.250 <span class="text-sm font-normal text-slate-400">u.</span>
-          </p>
-        </div>
-      </div>
+      <!-- Contenido inyectado -->
     </div>
   </main>
 
+  <!-- Drawer para Movimientos/Detalle -->
   <div id="drawer-overlay" onclick="closeDrawer()"
     class="fixed inset-0 bg-slate-900/50 z-50 hidden backdrop-blur-sm transition-opacity"></div>
-
   <div id="drawer"
     class="fixed top-0 right-0 z-[60] h-screen w-full md:w-96 bg-white shadow-2xl translate-x-full transition-transform duration-300 ease-in-out p-6 overflow-y-auto">
     <div class="flex justify-between items-center mb-6">
-      <h3 class="text-xl font-bold text-slate-800 italic" id="drawer-pos-id">
-        Posición
-      </h3>
-      <button onclick="closeDrawer()" class="text-slate-400 hover:text-slate-600 p-2">
-        <i class="fas fa-times text-xl"></i>
-      </button>
+      <h3 class="text-xl font-bold text-slate-800 italic uppercase tracking-tighter" id="drawer-pos-id">Posición</h3>
+      <button onclick="closeDrawer()" class="text-slate-400 hover:text-slate-600 p-2"><i
+          class="fas fa-times text-xl"></i></button>
     </div>
-
     <div id="step-1" class="space-y-6">
-      <div class="bg-indigo-50 p-4 rounded-2xl flex items-center gap-4 border border-indigo-100 font-bold">
-        <div class="w-16 h-16 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-sm">
-          <i id="drawer-icon" class="fas fa-box text-3xl"></i>
-        </div>
-        <div>
-          <h4 class="font-bold text-slate-800 italic" id="drawer-prod-name">
-            Producto
-          </h4>
-          <p class="text-xs text-slate-500 font-bold" id="drawer-prod-desc">
-            Descripción
+      <div class="bg-indigo-50 p-4 rounded-2xl flex items-center gap-4 border border-indigo-100">
+        <div class="w-16 h-16 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-sm"><i
+            id="drawer-icon" class="fas fa-box text-3xl"></i></div>
+        <div class="min-w-0">
+          <p id="drawer-prod-name" class="font-black text-slate-800 uppercase italic truncate leading-tight">Producto
           </p>
+          <p id="drawer-prod-sku" class="text-[10px] text-slate-400 font-bold tracking-widest">SKU: ---</p>
         </div>
       </div>
-
-      <div class="bg-slate-50 p-4 rounded-2xl text-center">
-        <p class="text-[10px] uppercase font-bold text-slate-400">
-          Stock Actual
-        </p>
-        <p class="text-3xl font-black text-slate-800" id="drawer-prod-qty">
-          0
-        </p>
-      </div>
-
       <div class="space-y-3 pt-4 border-t border-slate-100">
         <button onclick="goToStep2()"
-          class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">
-          <i class="fas fa-exchange-alt"></i> Mover Stock
-        </button>
-        <button
-          class="w-full bg-white border border-slate-200 text-slate-600 p-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-slate-50 transition-all">
-          <i class="fas fa-pen"></i> Ajustar Inventario
-        </button>
+          class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all"><i
+            class="fas fa-exchange-alt"></i> Mover Stock</button>
       </div>
     </div>
-
     <div id="step-2" class="hidden space-y-6 animate-fadeIn">
-      <button onclick="goToStep1()" class="text-indigo-600 text-sm font-bold flex items-center gap-2 mb-4 italic">
-        <i class="fas fa-arrow-left"></i> Volver al detalle
-      </button>
-
+      <button onclick="goToStep1()" class="text-indigo-600 text-sm font-bold flex items-center gap-2 mb-4 italic"><i
+          class="fas fa-arrow-left"></i> Volver</button>
       <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-bold text-slate-700 mb-2 font-bold uppercase italic">Cantidad a mover</label>
-          <input type="number" id="move-qty"
-            class="w-full p-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-            placeholder="Ej: 100" />
-        </div>
-        <div>
-          <label class="block text-sm font-bold text-slate-700 mb-2 font-bold uppercase italic">Posición Destino</label>
-          <select id="move-dest"
-            class="w-full p-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
-            <option value="">Seleccionar posición...</option>
-            <option value="A-01-04">A-01-04 (Vacío)</option>
-            <option value="A-01-08">A-01-08 (Vacío)</option>
-          </select>
-        </div>
+        <input type="number" id="move-qty" class="w-full p-3 bg-slate-100 rounded-xl outline-none font-bold"
+          placeholder="Cantidad" />
+        <select id="move-dest" class="w-full p-3 bg-slate-100 rounded-xl outline-none font-bold">
+          <option value="">Seleccionar destino...</option>
+        </select>
         <button onclick="confirmMove()"
-          class="w-full bg-emerald-500 text-white p-4 rounded-xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-100 transition-all uppercase">
-          Confirmar Traspaso
-        </button>
+          class="w-full bg-emerald-500 text-white p-4 rounded-xl font-bold uppercase">Confirmar Traspaso</button>
       </div>
     </div>
   </div>
+
+  <!-- Modal Pedidos -->
   <div id="modal-pedido"
     class="fixed inset-0 bg-slate-900/60 z-[100] hidden backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-fadeIn">
       <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-        <h3 class="text-xl font-bold text-slate-800 italic uppercase">Generar Nuevo Pedido Vital Can</h3>
-        <button onclick="cerrarModalPedido()" class="text-slate-400 hover:text-slate-600"><i
+        <h3 class="text-xl font-bold text-slate-800 italic uppercase">Nuevo Pedido Vital Can</h3><button
+          onclick="cerrarModalPedido()" class="text-slate-400 hover:text-slate-600"><i
             class="fas fa-times"></i></button>
       </div>
       <div class="p-8 space-y-6">
-        <div>
-          <label class="block text-xs font-black text-slate-400 uppercase italic mb-2">Cliente / Veterinaria</label>
-          <select id="ped-cliente-select"
-            class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold italic text-slate-700">
-            <option value="">Cargando clientes...</option>
-          </select>
-        </div>
-
+        <select id="ped-cliente-select" class="w-full p-4 bg-slate-50 rounded-2xl font-bold italic text-slate-700">
+          <option value="">Cargando clientes...</option>
+        </select>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-          <div class="md:col-span-2">
-            <label class="block text-[10px] font-black text-slate-400 uppercase italic mb-1">Producto</label>
-            <select id="ped-producto-select" class="w-full p-3 bg-white rounded-xl outline-none font-bold text-sm">
-            </select>
-          </div>
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase italic mb-1">Cant.</label>
-            <input type="number" id="ped-cantidad-input" placeholder="0"
-              class="w-full p-3 bg-white rounded-xl outline-none font-bold">
-          </div>
+          <div class="md:col-span-2"><select id="ped-producto-select"
+              class="w-full p-3 bg-white rounded-xl font-bold text-sm"></select></div>
+          <div><input type="number" id="ped-cantidad-input" placeholder="0"
+              class="w-full p-3 bg-white rounded-xl font-bold"></div>
           <button onclick="agregarItemTemporal()"
-            class="md:col-span-3 bg-slate-800 text-white p-3 rounded-xl font-bold text-xs uppercase hover:bg-slate-700 transition-all">
-            <i class="fas fa-plus mr-2"></i> Añadir a la lista
-          </button>
+            class="md:col-span-3 bg-slate-800 text-white p-3 rounded-xl font-bold text-xs uppercase">Añadir</button>
         </div>
-
         <div class="max-h-40 overflow-y-auto border-t border-b border-slate-50 py-2" id="lista-items-temporal">
-          <p class="text-center text-slate-400 text-xs italic py-4">No hay productos añadidos aún.</p>
+          <p class="text-center text-slate-400 text-xs italic py-4">Vacio</p>
         </div>
-
         <button id="btn-confirmar-pedido" onclick="guardarPedidoSupabase()"
-          class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black italic uppercase shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">
-          Confirmar y Guardar Pedido
-        </button>
+          class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black italic uppercase shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">Guardar
+          Pedido</button>
       </div>
     </div>
   </div>
 
-  <!-- Módulo móvil y base (scripts pesados se cargan bajo demanda vía router.js) -->
+  <!-- Modal Comprobante (Faltaba en la reconstrucción anterior) -->
+  <div id="modal-comprobante"
+    class="fixed inset-0 bg-slate-900/80 z-[200] hidden backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-[3rem] overflow-hidden shadow-2xl animate-fadeIn">
+      <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <h4 class="font-black italic uppercase text-slate-800 tracking-tighter">Validar Comprobante</h4>
+        <button onclick="cerrarModalComprobante()"
+          class="w-10 h-10 rounded-full hover:bg-slate-200 transition-all text-slate-400"><i
+            class="fas fa-times"></i></button>
+      </div>
+      <div class="p-4 bg-slate-100"><img id="modal-img-comprobante" src=""
+          class="w-full rounded-2xl border-4 border-white shadow-lg min-h-[300px] object-contain bg-slate-200"></div>
+      <div class="p-8 flex gap-4">
+        <button id="btn-rechazar-pago"
+          class="flex-1 py-4 bg-rose-50 text-rose-500 rounded-2xl font-black uppercase italic text-xs border-2 border-rose-100 hover:bg-rose-500 hover:text-white transition-all">Rechazar</button>
+        <button id="btn-aprobar-pago"
+          class="flex-2 w-full py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase italic text-xs shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition-all">Aprobar
+          Pago</button>
+      </div>
+    </div>
+  </div>
+
   <script src="../js/mobile.js"></script>
   <script src="../js/app.js"></script>
 </body>

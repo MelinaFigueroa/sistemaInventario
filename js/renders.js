@@ -193,12 +193,13 @@ function pintarTablaFacturacion(data) {
 
     let totalDia = 0;
     tbody.innerHTML = data
-        .map((f) => {
+        .map((f, index) => {
             totalDia += parseFloat(f.total_final);
             const nroAMostrar = f.nro_comprobante ? f.nro_comprobante : f.id.substring(0, 8);
+            const delay = Math.min(index * 50, 400); // Máximo 400ms de retraso
 
             return `
-        <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50">
+        <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50 animate-fade-up transform-gpu" style="animation-delay: ${delay}ms">
             <td class="p-4 text-slate-400">
                 <span class="text-slate-700 font-black">#${nroAMostrar}</span><br>
                 <span class="text-[9px] font-bold uppercase">${new Date(f.created_at).toLocaleDateString()}</span>
@@ -404,8 +405,10 @@ function pintarClientes(data) {
         return;
     }
 
-    container.innerHTML = data.map(c => `
-        <div class="bg-white rounded-3xl p-6 border border-slate-100 hover:shadow-lg transition-all group">
+    container.innerHTML = data.map((c, index) => {
+        const delay = Math.min(index * 100, 500);
+        return `
+        <div class="bg-white rounded-3xl p-6 border border-slate-100 hover:shadow-lg transition-all group animate-fade-up transform-gpu" style="animation-delay: ${delay}ms">
             <div class="flex justify-between items-start mb-4">
                 <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
                     <i class="fas fa-store text-xl"></i>
@@ -429,5 +432,6 @@ function pintarClientes(data) {
                 </button>
             </div>
         </div>
-    `).join("");
+        `;
+    }).join("");
 }
