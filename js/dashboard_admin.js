@@ -32,16 +32,22 @@ function configurarVisibilidadSegunRol(rol) {
     const accountingCard = document.getElementById('admin-accounting-card');
     const btnRecepcion = document.getElementById('btn-quick-recepcion');
     const btnCobranza = document.getElementById('btn-quick-cobranza');
+    const btnInventario = document.getElementById('btn-quick-inventario');
+    const btnMovimientos = document.getElementById('btn-quick-movimientos');
+    const btnClientes = document.getElementById('btn-quick-clientes');
+    const btnVentas = document.getElementById('btn-quick-ventas');
+    const warehouseKPIs = document.getElementById('warehouse-kpis');
 
     if (rol === 'admin' || rol === 'administracion') {
         if (adminKPIs) adminKPIs.classList.remove('hidden');
         if (adminFeed) adminFeed.classList.remove('hidden');
         if (warehouseKPIs) warehouseKPIs.classList.remove('hidden');
         if (accountingCard) accountingCard.classList.remove('hidden');
-        if (btnRecepcion) btnRecepcion.classList.remove('hidden');
-        if (btnCobranza) btnCobranza.classList.remove('hidden');
+
+        [btnRecepcion, btnCobranza, btnInventario, btnMovimientos, btnClientes, btnVentas].forEach(b => {
+            if (b) b.classList.remove('hidden');
+        });
     } else if (rol === 'ventas') {
-        // Ventas: Ve métricas de dinero pero no de bodega
         if (adminKPIs) {
             adminKPIs.classList.remove('hidden');
             const elEficiencia = document.getElementById('kpi-eficiencia')?.closest('div');
@@ -49,25 +55,32 @@ function configurarVisibilidadSegunRol(rol) {
         }
         if (adminFeed) adminFeed.classList.remove('hidden');
 
-        // Ventas no debe ver movimientos de stock, solo ventas
         if (warehouseKPIs) {
-            warehouseKPIs.classList.remove('hidden'); // Para ver Bolsas en Stock
-            // Pero ocultamos el feed de movimientos
+            warehouseKPIs.classList.remove('hidden');
             const elMovimientosCard = document.getElementById('kpi-movimientos-hoy')?.closest('.bg-white');
             if (elMovimientosCard) elMovimientosCard.classList.add('hidden');
         }
 
         if (accountingCard) accountingCard.classList.add('hidden');
+
         if (btnRecepcion) btnRecepcion.classList.add('hidden');
         if (btnCobranza) btnCobranza.classList.remove('hidden');
+        if (btnInventario) btnInventario.classList.remove('hidden');
+        if (btnMovimientos) btnMovimientos.classList.add('hidden');
+        if (btnClientes) btnClientes.classList.remove('hidden');
+        if (btnVentas) btnVentas.classList.remove('hidden');
     } else {
-        // Por defecto o Depósito: Ocultamos finanzas
         if (adminKPIs) adminKPIs.classList.add('hidden');
         if (adminFeed) adminFeed.classList.add('hidden');
         if (warehouseKPIs) warehouseKPIs.classList.remove('hidden');
         if (accountingCard) accountingCard.classList.add('hidden');
+
         if (btnRecepcion) btnRecepcion.classList.remove('hidden');
         if (btnCobranza) btnCobranza.classList.add('hidden');
+        if (btnInventario) btnInventario.classList.remove('hidden');
+        if (btnMovimientos) btnMovimientos.classList.remove('hidden');
+        if (btnClientes) btnClientes.classList.add('hidden');
+        if (btnVentas) btnVentas.classList.add('hidden');
     }
 }
 

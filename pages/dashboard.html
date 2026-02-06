@@ -341,10 +341,12 @@
     class="fixed inset-0 bg-black/50 z-[90] hidden md:hidden backdrop-blur-sm transition-opacity">
   </div>
 
-  <!-- Botón Hamburguesa (Integrado en Header en Mobile) -->
+  <!-- Botón Hamburguesa (Centrado Milimetrado) -->
   <button id="hamburger-btn" onclick="toggleSidebar()"
-    class="fixed top-[18px] left-4 z-[110] p-2.5 text-slate-600 bg-white rounded-xl shadow-lg md:hidden transition-all hover:bg-slate-100 active:scale-95 border border-slate-100 flex items-center justify-center h-10 w-10">
-    <i class="fas fa-bars text-lg"></i>
+    class="fixed top-0 left-0 z-[110] h-[76px] w-[56px] flex items-center justify-center text-slate-600 bg-transparent md:hidden transition-all active:scale-90">
+    <div class="bg-white p-2.5 rounded-xl shadow-lg border border-slate-100 flex items-center justify-center">
+      <i class="fas fa-bars text-lg"></i>
+    </div>
   </button>
 
   <main id="main-content" class="md:ml-64 min-h-screen">
@@ -361,34 +363,45 @@
           class="hidden md:block absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16 blur-2xl">
         </div>
 
-        <!-- Lado Izquierdo: Saludo y Usuario -->
-        <div class="relative z-10 flex items-center gap-2 md:gap-6 ml-14 md:ml-0">
-          <!-- Saludo (Desktop Gigante / Mobile Compacto) -->
-          <h2 id="welcome-text-short"
-            class="text-lg md:text-5xl font-black text-slate-800 italic uppercase tracking-tighter leading-none shrink-0">
-            ¡Hola!</h2>
+        <!-- Lado Izquierdo: Saludo y Usuario (Diseño Dinámico Mobile/Desktop) -->
+        <div class="relative z-10 flex items-center gap-3 ml-12 md:ml-0 h-full">
+          <!-- Bloque de Saludo Izquierdo -->
+          <div class="flex flex-col items-center justify-center -space-y-1 md:space-y-0">
+            <h2 id="welcome-text-short"
+              class="text-lg md:text-5xl font-black text-slate-800 italic uppercase tracking-tighter leading-none">
+              ¡Hola!</h2>
+           
+          </div>
 
-          <div class="flex flex-col justify-center leading-tight">
+          <!-- Bloque de Identidad Derecho -->
+          <div class="flex flex-col justify-center leading-[0.85] md:leading-tight">
             <div class="flex items-center gap-1">
               <span id="user-first-name"
-                class="text-[11px] md:text-2xl font-black text-indigo-600 uppercase italic tracking-tighter">Cargando...</span>
-              <!-- Icono de Rol (Mobile) -->
-              <i id="role-icon-mobile" class="fas fa-crown text-[9px] text-indigo-400 md:hidden"></i>
+                class="text-[12px] md:text-2xl font-black text-indigo-600 uppercase italic tracking-tighter">Cargando...</span>
             </div>
-            <span id="user-last-name"
-              class="text-[9px] md:text-xl font-bold text-slate-400 uppercase italic tracking-tighter">...</span>
+            <div class="flex flex-col">
+              <span id="user-last-name"
+                class="text-[9px] md:text-xl font-bold text-slate-400 uppercase italic tracking-tighter">...</span>
+            </div>
+            <div>
+          <!-- Texto de Rol (Mobile) -->
+            <span id="role-text-mobile"
+              class="text-[8px] font-black text-indigo-400 uppercase italic tracking-widest md:hidden">CARGANDO</span>         
+              <!-- Icono de Rol (Mobile) -->
+            <i id="role-icon-mobile" class="fas fa-crown text-[14px] text-indigo-400 md:hidden mt-0.5"></i>
+          </div>
           </div>
 
           <!-- Badge Rol (Solo Desktop) -->
           <div id="global-user-role-badge"
-            class="hidden md:flex px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-indigo-100 items-center gap-1.5 w-fit h-fit">
+            class="hidden md:flex px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-indigo-100 items-center gap-1.5 w-fit h-fit ml-2">
             <i class="fas fa-shield-alt text-[8px]"></i>
             <span id="global-role-text">Cargando...</span>
           </div>
         </div>
 
         <!-- Derecha: Logout y Fecha -->
-        <div class="flex flex-col md:flex-row items-center md:items-center gap-0.5 md:gap-3 relative z-10 pr-2 md:pr-0">
+        <div class="flex flex-col md:flex-row items-center md:items-center gap-0.5 md:gap-3 relative z-10 pr-0 md:pr-0">
           <!-- Fecha (Compacta en Mobile) -->
           <div class="text-right">
             <p id="global-current-date"
@@ -398,7 +411,7 @@
 
           <!-- Botón Logout (Icono en Mobile / Full en Desktop) -->
           <button onclick="cerrarSesion()"
-            class="flex items-center justify-center bg-rose-50 text-rose-500 rounded-lg md:rounded-2xl font-black uppercase italic transition-all shadow-sm active:scale-95 group p-1.5 md:px-6 md:py-3 border border-rose-100 hover:bg-rose-500 hover:text-white">
+            class="flex items-center justify-center bg-rose-50 text-rose-500 rounded-lg md:rounded-2xl font-black uppercase italic transition-all shadow-sm active:scale-95 group p-1.5 md:px-6 md:py-3 border border-rose-100 hover:bg-rose-500 hover:text-white ml-2 md:ml-0">
             <i class="fas fa-sign-out-alt md:mr-3 group-hover:translate-y-1 transition-transform"></i>
             <span class="hidden md:inline text-xs">Cerrar Sesión</span>
           </button>

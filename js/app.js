@@ -339,6 +339,7 @@ function actualizarSaludoHeader() {
     const elRole = document.getElementById("global-role-text");
     const elDate = document.getElementById("global-current-date");
     const elIconMobile = document.getElementById("role-icon-mobile");
+    const elRoleMobile = document.getElementById("role-text-mobile");
 
     const rolKey = (perfil.rol || 'invitado').toLowerCase();
     const iconClass = ROL_ICONS[rolKey] || 'user';
@@ -359,7 +360,11 @@ function actualizarSaludoHeader() {
     }
 
     if (elRole) elRole.innerText = perfil.rol || "Usuario";
-    if (elIconMobile) elIconMobile.className = `fas fa-${iconClass} text-[10px] text-indigo-400 md:hidden`;
+    if (elRoleMobile) elRoleMobile.innerText = perfil.rol || "Usuario";
+
+    if (elIconMobile) {
+        elIconMobile.className = `fas fa-${iconClass} text-[14px] text-indigo-400 md:hidden mt-0.5`;
+    }
 
     if (elDate) {
         // En mobile (ventana pequeña) mostramos fecha corta y hora
