@@ -340,6 +340,7 @@ function actualizarSaludoHeader() {
     const elDate = document.getElementById("global-current-date");
     const elIconMobile = document.getElementById("role-icon-mobile");
     const elRoleMobile = document.getElementById("role-text-mobile");
+    const elIconDesktop = document.getElementById("global-role-icon");
 
     const rolKey = (perfil.rol || 'invitado').toLowerCase();
     const iconClass = ROL_ICONS[rolKey] || 'user';
@@ -365,6 +366,9 @@ function actualizarSaludoHeader() {
     if (elIconMobile) {
         elIconMobile.className = `fas fa-${iconClass} text-[14px] text-indigo-400 md:hidden mt-0.5`;
     }
+    if (elIconDesktop) {
+        elIconDesktop.className = `fas fa-${iconClass} text-[10px]`;
+    }
 
     if (elDate) {
         // En mobile (ventana pequeña) mostramos fecha corta y hora
@@ -377,7 +381,7 @@ function actualizarSaludoHeader() {
         let fechaStr = ahora.toLocaleDateString('es-AR', opciones).toUpperCase();
         if (esMobile) fechaStr = fechaStr.replace('.', ''); // Limpiar puntos de abr.
 
-        const horaStr = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+        const horaStr = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
         elDate.innerText = `${fechaStr} - ${horaStr}`;
     }
 }
