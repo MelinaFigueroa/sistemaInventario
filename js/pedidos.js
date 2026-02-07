@@ -194,6 +194,7 @@ async function guardarPedidoSupabase() {
         Notificar.toast("Pedido guardado exitosamente", "success");
         cerrarModalPedido();
         if (typeof renderPedidos === 'function') renderPedidos();
+        if (typeof actualizarDashboard === 'function') await actualizarDashboard();
 
     } catch (e) {
         console.error("Error guardando pedido:", e);
@@ -490,7 +491,12 @@ async function procesarPicking(pedidoId) {
     try {
         const { data: pedidoInfo, error: errP } = await _supabase
             .from("pedidos")
-            .select(`cliente_nombre, cliente_cuit, pedido_detalle(cantidad, producto_id, productos(nombre, precios(precio_venta)))`)
+            .select(`
+                cliente_nombre, 
+                cliente_cuit, 
+                clientes ( cuit ),
+                pedido_detalle(cantidad, producto_id, productos(nombre, precios(precio_venta)))
+            `)
             .eq("id", pedidoId)
             .single();
 
@@ -558,7 +564,7 @@ async function procesarPicking(pedidoId) {
         await _supabase.from("facturas").insert([{
             pedido_id: pedidoId,
             cliente_nombre: pedidoInfo.cliente_nombre,
-            cliente_cuit: pedidoInfo.cliente_cuit,
+            cliente_cuit: pedidoInfo.cliente_cuit || pedidoInfo.clientes?.cuit || "---",
             total_neto: totalPedido,
             iva: totalPedido * 0.21,
             total_final: totalPedido * 1.21,
@@ -584,6 +590,9 @@ async function procesarPicking(pedidoId) {
 
         renderPedidos();
         if (typeof renderFacturacion === "function") renderFacturacion();
+        if (typeof renderPosiciones === 'function') renderPosiciones();
+        if (typeof renderMovimientos === 'function') renderMovimientos();
+        if (typeof actualizarDashboard === 'function') await actualizarDashboard();
 
     } catch (e) {
         console.error(e);

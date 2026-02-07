@@ -19,6 +19,7 @@ async function registrarMovimientoManual(tipo, productoId, origen, destino, cant
 
         Notificar.toast("Movimiento registrado", "success");
         if (typeof renderMovimientos === 'function') renderMovimientos();
+        if (typeof actualizarDashboard === 'function') await actualizarDashboard();
 
     } catch (error) {
         console.error("Error registrando movimiento:", error);
@@ -150,6 +151,7 @@ async function transferirEntreRacks(origenId, destinoId, cantidad) {
 
         if (typeof renderPosiciones === 'function') renderPosiciones();
         if (typeof renderMovimientos === 'function') renderMovimientos();
+        if (typeof actualizarDashboard === 'function') await actualizarDashboard();
 
     } catch (error) {
         console.error("Error en transferencia:", error);
