@@ -57,7 +57,7 @@
                     <div id="preview-container"
                         class="hidden mb-4 w-full max-w-[200px] h-48 bg-white rounded-2xl overflow-hidden border-2 border-indigo-500 shadow-lg relative">
                         <img id="img-preview" src="#" class="w-full h-full object-cover">
-                        <button type="button" onclick="resetFile()"
+                        <button type="button" onclick="resetPreviewCobranza()"
                             class="absolute top-2 right-2 bg-rose-500 text-white w-8 h-8 rounded-full shadow-lg">
                             <i class="fas fa-times"></i>
                         </button>
@@ -71,7 +71,7 @@
                         <span class="text-[10px] font-black uppercase text-indigo-600 italic mt-2">Tomar Foto o
                             Subir</span>
                         <input type="file" id="cob-foto" accept="image/*" capture="environment" class="hidden"
-                            onchange="mostrarPreview(this)">
+                            onchange="mostrarPreviewCobranza(this)">
                     </label>
                 </div>
             </div>
@@ -93,62 +93,3 @@
         </form>
     </div>
 </main>
-
-<script>
-    /**
-     * Lógica de UI para la página de Cobranzas
-     */
-    (async function initCobranzas() {
-        try {
-            // Cargar clientes
-            const { data: clientes } = await _supabase.from('clientes').select('id, nombre').order('nombre');
-            const select = document.getElementById('cob-cliente-select');
-            if (select) {
-                select.innerHTML = '<option value="">Seleccionar Cliente...</option>' +
-                    clientes.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
-            }
-        } catch (e) { console.error(e); }
-    })();
-
-    function mostrarPreview(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                document.getElementById('img-preview').src = e.target.result;
-                document.getElementById('preview-container').classList.remove('hidden');
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    function resetFile() {
-        document.getElementById('cob-foto').value = '';
-        document.getElementById('preview-container').classList.add('hidden');
-    }
-
-    async function prepararEnvioPago(e) {
-        e.preventDefault();
-
-        const pagoData = {
-            cliente_id: document.getElementById('cob-cliente-select').value,
-            monto: parseFloat(document.getElementById('cob-monto').value),
-            metodo_pago: document.getElementById('cob-metodo').value,
-            notas: document.getElementById('cob-observaciones').value
-        };
-
-        const fileInput = document.getElementById('cob-foto');
-        const archivo = fileInput.files[0];
-
-        if (!archivo) {
-            Swal.fire('¡FALTA COMPROBANTE!', 'Tenés que subir la foto de la transferencia o recibo.', 'error');
-            return;
-        }
-
-        // Llamar a la función del core en finanzas.js
-        if (typeof registrarPago === 'function') {
-            await registrarPago(pagoData, archivo);
-        } else {
-            Notificar.error("ERROR CRÍTICO", "Módulo de finanzas no cargado.");
-        }
-    }
-</script>
