@@ -200,17 +200,15 @@ function pintarTablaFacturacion(data) {
 
             return `
         <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50 animate-fade-up transform-gpu" style="animation-delay: ${delay}ms">
-            <td class="p-4 text-slate-400">
+            <td class="p-4 text-slate-400 text-center">
+            <span class="text-[12px] font-bold uppercase">${new Date(f.created_at).toLocaleDateString()}</span><br>
                 <span class="text-slate-700 font-black">#${nroAMostrar}</span><br>
-                <span class="text-[10px] text-indigo-600 font-black uppercase italic leading-none">
-                    CUIT: ${f.cuit_final}
-                </span><br>
-                <span class="text-[9px] font-bold uppercase">${new Date(f.created_at).toLocaleDateString()}</span>
+                ${f.cae ? `<span class="text-[12px] text-emerald-400 font-normal">CAE: ${f.cae}</span>` : ""}              
             </td>
             <td class="p-4 text-slate-700 uppercase font-black italic">
-                ${f.cliente_nombre}
-                ${f.cae ? `<br><span class="text-[8px] text-emerald-500 font-normal">CAE: ${f.cae}</span>` : ""}
-            </td>
+    ${f.cliente_nombre}
+    ${f.cuit_final ? `<br><span class="text-[12px] text-slate-500 font-normal">CUIT: ${f.cuit_final}</span>` : ""}
+</td>
             <td class="p-4">
                 <div class="flex items-center gap-2">
                     <div class="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-black shadow-sm">
