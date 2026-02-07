@@ -4,8 +4,13 @@
  * FUNCIÓN CENTRAL: Se dispara cuando el router carga 'inicio.html'
  */
 async function actualizarDashboard() {
-    console.log("📊 Sincronizando Dashboard Central...");
-    const rol = window.currentUserRole;
+    // Verificamos si _supabase existe antes de arrancar para evitar pantalla blanca
+    if (typeof _supabase === 'undefined') {
+        console.error("CRÍTICO: _supabase no está definido. Revisá config.js");
+        return;
+    }
+
+    const rol = (window.currentUserRole || "").toLowerCase();
 
     // 1. Mostrar/Ocultar secciones según Rol
     configurarVisibilidadSegunRol(rol);
@@ -14,9 +19,11 @@ async function actualizarDashboard() {
     renderizarFechaActual();
     if (typeof actualizarSaludoHeader === 'function') actualizarSaludoHeader();
     await cargarKpisStock();
+    await cargarKpisLogistica();
 
-    // 3. Cargar Datos Pro (Admin / Administracion)
-    if (rol === 'admin' || rol === 'administracion') {
+    // 3. Cargar Datos Pro (Admin / Administracion / Ventas)
+    // Agregamos 'ventas' a la condición y manejamos posibles acentos
+    if (rol === 'admin' || rol === 'administracion' || rol === 'administración' || rol === 'ventas') {
         await cargarKpisFinancieros();
         await cargarFeedPagos();
         await cargarSaludCartera();
@@ -38,7 +45,11 @@ function configurarVisibilidadSegunRol(rol) {
     const btnVentas = document.getElementById('btn-quick-ventas');
     const warehouseKPIs = document.getElementById('warehouse-kpis');
 
-    if (rol === 'admin' || rol === 'administracion') {
+    // Manejo de normalización de roles
+    const normalizedRol = rol.toLowerCase();
+
+    // Reseteamos visibilidad base
+    if (normalizedRol === 'admin' || normalizedRol === 'administracion' || normalizedRol === 'administración') {
         if (adminKPIs) adminKPIs.classList.remove('hidden');
         if (adminFeed) adminFeed.classList.remove('hidden');
         if (warehouseKPIs) warehouseKPIs.classList.remove('hidden');
@@ -47,7 +58,7 @@ function configurarVisibilidadSegunRol(rol) {
         [btnRecepcion, btnCobranza, btnInventario, btnMovimientos, btnClientes, btnVentas].forEach(b => {
             if (b) b.classList.remove('hidden');
         });
-    } else if (rol === 'ventas') {
+    } else if (normalizedRol === 'ventas') {
         if (adminKPIs) {
             adminKPIs.classList.remove('hidden');
             const elEficiencia = document.getElementById('kpi-eficiencia')?.closest('div');
@@ -69,7 +80,7 @@ function configurarVisibilidadSegunRol(rol) {
         if (btnMovimientos) btnMovimientos.classList.add('hidden');
         if (btnClientes) btnClientes.classList.remove('hidden');
         if (btnVentas) btnVentas.classList.remove('hidden');
-    } else {
+    } else { // Depósito u otros
         if (adminKPIs) adminKPIs.classList.add('hidden');
         if (adminFeed) adminFeed.classList.add('hidden');
         if (warehouseKPIs) warehouseKPIs.classList.remove('hidden');
@@ -89,41 +100,70 @@ function configurarVisibilidadSegunRol(rol) {
  */
 async function cargarKpisFinancieros() {
     try {
-        const hoy = new Date().toISOString().split('T')[0];
+        const hoy = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
 
-        // Ventas del Día
-        const { data: facturasHoy } = await _supabase.from('facturas').select('total_final').gte('created_at', hoy);
-        const totalVentas = facturasHoy?.reduce((acc, f) => acc + (f.total_final || 0), 0) || 0;
+        // 1. Facturas de Hoy (Filtrado por fecha local)
+        const { data: facturas, error: errFact } = await _supabase
+            .from('facturas')
+            .select('total_final, created_at')
+            .order('created_at', { ascending: false })
+            .limit(1000);
+
+        if (errFact) console.warn("Error leyendo facturas:", errFact.message);
+
+        const totalVentas = facturas?.reduce((acc, f) => {
+            if (!f.created_at) return acc;
+            // Convertimos la fecha de Supabase (UTC) a fecha local (YYYY-MM-DD)
+            const fechaLocal = new Date(f.created_at).toLocaleDateString('en-CA');
+            if (fechaLocal === hoy) {
+                return acc + (parseFloat(f.total_final) || 0);
+            }
+            return acc;
+        }, 0) || 0;
 
         const elVentas = document.getElementById('kpi-ventas-hoy');
         if (elVentas) {
             const valorAnterior = parseFloat(elVentas.innerText.replace(/[^0-9.-]+/g, "")) || 0;
             animarValor('kpi-ventas-hoy', valorAnterior, totalVentas, true);
-            if (totalVentas > valorAnterior) elVentas.parentElement.classList.add('pulse-success');
-            setTimeout(() => elVentas.parentElement.classList.remove('pulse-success'), 2000);
         }
 
-        // Pagos a Validar
-        const { count } = await _supabase.from('pagos').select('id', { count: 'exact' }).eq('estado', 'pendiente');
+        // 2. Pagos a Validar (Pendientes)
+        const { count, error: errPagos } = await _supabase
+            .from('pagos')
+            .select('id', { count: 'exact' })
+            .eq('estado', 'pendiente');
+
+        if (errPagos) console.warn("Error leyendo pagos:", errPagos.message);
+
         const elPagosCount = document.getElementById('kpi-cobranzas-pendientes');
         if (elPagosCount) {
             const countAnterior = parseInt(elPagosCount.innerText) || 0;
             animarValor('kpi-cobranzas-pendientes', countAnterior, count || 0, false);
         }
 
-        // Eficiencia
-        const { data: pedidosStats } = await _supabase.from('pedidos').select('estado');
-        const entregados = pedidosStats?.filter(p => p.estado === 'entregado').length || 0;
-        const total = pedidosStats?.length || 0;
-        const eficiencia = total > 0 ? Math.round((entregados / total) * 100) : 0;
+        // 3. Eficiencia (Pedidos entregados hoy / Total hoy)
+        const { data: pedidosStats } = await _supabase
+            .from('pedidos')
+            .select('estado, created_at')
+            .order('created_at', { ascending: false })
+            .limit(1000);
+
+        const pedsHoy = pedidosStats?.filter(p => {
+            if (!p.created_at) return false;
+            return new Date(p.created_at).toLocaleDateString('en-CA') === hoy;
+        }) || [];
+
+        const entregadosHoy = pedsHoy.filter(p => p.estado === 'entregado').length || 0;
+        const totalHoy = pedsHoy.length || 0;
+        const eficiencia = totalHoy > 0 ? Math.round((entregadosHoy / totalHoy) * 100) : 0;
 
         const elEficiencia = document.getElementById('kpi-eficiencia');
         const elPercent = document.getElementById('efficiency-percent');
-        if (elEficiencia) elEficiencia.innerText = `${entregados} / ${total} Peds.`;
+        if (elEficiencia) elEficiencia.innerText = `${entregadosHoy} / ${totalHoy} Peds.`;
         if (elPercent) elPercent.innerText = `${eficiencia}%`;
 
-        actualizarBadgeSidebar(count);
-    } catch (err) { console.error("Error en KPIs Financieros:", err); }
+        actualizarBadgeSidebar(count || 0);
+    } catch (err) { console.error("Error general en KPIs Financieros:", err); }
 }
 
 /**
@@ -132,7 +172,10 @@ async function cargarKpisFinancieros() {
 function animarValor(id, inicio, fin, esMoneda = false) {
     const obj = document.getElementById(id);
     if (!obj) return;
-    if (inicio === fin) return;
+    if (inicio === fin) {
+        obj.innerText = esMoneda ? formatearMoneda(fin) : fin;
+        return;
+    }
 
     let start = null;
     const duracion = 800;
@@ -161,7 +204,7 @@ async function cargarFeedPagos() {
     if (!contenedor) return;
 
     try {
-        const { data: pagos } = await _supabase
+        const { data: pagos, error } = await _supabase
             .from('pagos')
             .select(`
                 id, monto, metodo_pago, created_at, comprobante_url,
@@ -170,6 +213,12 @@ async function cargarFeedPagos() {
             .eq('estado', 'pendiente')
             .order('created_at', { ascending: false })
             .limit(5);
+
+        if (error) {
+            console.warn("Error en Feed Pagos:", error.message);
+            contenedor.innerHTML = '<p class="text-[10px] text-rose-400 text-center">Error cargando pagos</p>';
+            return;
+        }
 
         if (!pagos || pagos.length === 0) {
             contenedor.innerHTML = '<p class="text-[10px] text-slate-400 text-center py-4 font-bold uppercase italic">Sin pagos que validar</p>';
@@ -183,7 +232,7 @@ async function cargarFeedPagos() {
                         <i class="fas fa-money-bill-transfer"></i>
                     </div>
                     <div>
-                        <p class="text-[10px] font-black text-slate-800 italic uppercase leading-none">${p.clientes.nombre}</p>
+                        <p class="text-[10px] font-black text-slate-800 italic uppercase leading-none">${p.clientes?.nombre || 'Cliente'}</p>
                         <p class="text-[9px] font-black text-emerald-600 mt-1">${formatearMoneda(p.monto)}</p>
                     </div>
                 </div>
@@ -196,6 +245,32 @@ async function cargarFeedPagos() {
 
     } catch (err) {
         console.error("Error cargando feed:", err);
+    }
+}
+
+/**
+ * KPIS DE LOGÍSTICA: Movimientos del día
+ */
+async function cargarKpisLogistica() {
+    try {
+        const hoy = new Date().toLocaleDateString('en-CA');
+        const { data: movs, error } = await _supabase
+            .from('movimientos')
+            .select('created_at')
+            .order('created_at', { ascending: false })
+            .limit(1000);
+
+        if (error) throw error;
+
+        const countHoy = movs?.filter(m => {
+            if (!m.created_at) return false;
+            return new Date(m.created_at).toLocaleDateString('en-CA') === hoy;
+        }).length || 0;
+
+        const elMovs = document.getElementById('kpi-movs-hoy');
+        if (elMovs) elMovs.innerText = countHoy;
+    } catch (err) {
+        console.error("Error cargando logistica:", err);
     }
 }
 
@@ -251,7 +326,13 @@ async function cargarKpisStock() {
  */
 async function cargarSaludCartera() {
     try {
-        const { data: clientes } = await _supabase.from('clientes').select('estado');
+        const { data: clientes, error } = await _supabase.from('clientes').select('*');
+
+        if (error) {
+            console.error("Error al cargar clientes:", error.message);
+            return;
+        }
+
         const activos = clientes?.filter(c => c.estado === 'activo').length || 0;
         const deudores = clientes?.filter(c => c.estado === 'deudor').length || 0;
 
@@ -261,7 +342,7 @@ async function cargarSaludCartera() {
         if (elActivos) elActivos.innerText = activos;
         if (elDeudores) elDeudores.innerText = deudores;
 
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error("Error en Salud Cartera:", err); }
 }
 
 /**
@@ -320,11 +401,9 @@ function cerrarModalComprobante() {
  * BADGE DE NOTIFICACIÓN EN SIDEBAR
  */
 function actualizarBadgeSidebar(count) {
-    // Buscamos el ítem de Cobranzas en el sidebar
     const menuItem = document.getElementById('menu-cobranzas');
     if (!menuItem) return;
 
-    // Buscar o Crear el badge redondo
     let badge = menuItem.querySelector('.nav-badge');
     if (!badge) {
         badge = document.createElement('span');

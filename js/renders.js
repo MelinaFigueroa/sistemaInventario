@@ -3,61 +3,8 @@
 // ==========================================
 // DASHBOARD
 // ==========================================
-async function actualizarDashboard() {
-    const kpiStock = document.getElementById("kpi-stock");
-    const kpiMovs = document.getElementById("kpi-movs");
-    const kpiCritico = document.getElementById("kpi-critico");
-    const contenedorAlertas = document.getElementById("contenedor-alertas");
-
-    if (!kpiStock || !kpiMovs) return;
-
-    // 1. Stock Total
-    const { data: posData } = await _supabase.from("posiciones").select("cantidad");
-    const total = posData ? posData.reduce((acc, curr) => acc + Math.max(0, curr.cantidad || 0), 0) : 0;
-    kpiStock.innerText = total.toLocaleString();
-
-    // 2. Contador de Movimientos
-    const { count } = await _supabase.from("movimientos").select("*", { count: "exact", head: true });
-    kpiMovs.innerText = count || 0;
-
-    // 3. Stock Crítico y Alertas
-    const { data: productosCriticos } = await _supabase
-        .from("productos")
-        .select(`
-            id, nombre, sku, stock_minimo,
-            posiciones (cantidad)
-        `);
-
-    if (productosCriticos) {
-        const alertas = productosCriticos.filter(p => {
-            const stockActual = p.posiciones?.reduce((acc, curr) => acc + (curr.cantidad || 0), 0) || 0;
-            return stockActual < (p.stock_minimo || 5);
-        });
-
-        if (kpiCritico) kpiCritico.innerText = alertas.length;
-
-        if (contenedorAlertas) {
-            if (alertas.length === 0) {
-                contenedorAlertas.innerHTML = '<p class="text-xs text-slate-400 italic">No hay alertas críticas pendientes.</p>';
-            } else {
-                contenedorAlertas.innerHTML = alertas.map(p => {
-                    const stockActual = p.posiciones?.reduce((acc, curr) => acc + (curr.cantidad || 0), 0) || 0;
-                    return `
-                    <div class="flex justify-between items-center bg-white p-4 rounded-2xl border-l-4 border-l-rose-500 shadow-sm mb-3">
-                        <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">SKU: ${p.sku}</p>
-                            <h4 class="text-sm font-black text-slate-800 uppercase italic">${p.nombre}</h4>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-xs font-black ${stockActual <= 0 ? 'text-rose-600' : 'text-amber-500'}">${stockActual} u.</p>
-                            <p class="text-[9px] font-bold text-slate-400 uppercase italic">Mín: ${p.stock_minimo || 5}</p>
-                        </div>
-                    </div>`;
-                }).join("");
-            }
-        }
-    }
-}
+// La función actualizarDashboard() fue movida a js/dashboard_admin.js para manejo avanzado de roles y KPIs.
+// Se mantiene este archivo renders.js enfocado únicamente en el renderizado de tablas y listas.
 
 // ==========================================
 // POSICIONES
@@ -159,15 +106,57 @@ async function renderFacturacion() {
     const tbody = document.getElementById("lista-facturas");
     if (!tbody) return;
 
-    const { data, error } = await _supabase
+    // Mejoramos la query para traer el CUIT desde el pedido o cliente si falta en la factura
+    // 1. Obtener Facturas (Query original + joins)
+    const { data: facturas, error } = await _supabase
         .from("facturas")
-        .select("*")
+        .select(`
+            *,
+            pedidos (
+                cliente_cuit,
+                clientes ( cuit )
+            )
+        `)
         .order("created_at", { ascending: false });
 
-    if (error) return;
+    if (error) {
+        console.error("Error cargando facturas:", error);
+        return;
+    }
 
-    cachedFacturas = data;
-    pintarTablaFacturacion(data);
+    // 2. Obtener Clientes (para fallback de CUIT por nombre)
+    // Esto asegura que si la relación falla, lo busquemos por el nombre del cliente
+    const { data: clientes } = await _supabase
+        .from("clientes")
+        .select("nombre, cuit");
+
+    // Mapa de CUITs por Nombre de Cliente (Normalizado)
+    const mapaCuits = {};
+    if (clientes) {
+        clientes.forEach(c => {
+            if (c.nombre) mapaCuits[c.nombre.trim().toUpperCase()] = c.cuit;
+        });
+    }
+
+    // 3. Enriquecer datos con el CUIT final
+    const facturasEnriquecidas = facturas.map(f => {
+        const cuitRelacion = f.cliente_cuit || f.pedidos?.cliente_cuit || f.pedidos?.clientes?.cuit;
+        const nombreNorm = (f.cliente_nombre || "").trim().toUpperCase();
+
+        let cuitFinal = cuitRelacion;
+        // Si no hay cuit por relación, buscamos por nombre exacto en el mapa
+        if (!cuitFinal || cuitFinal === '---') {
+            cuitFinal = mapaCuits[nombreNorm] || "---";
+        }
+
+        return {
+            ...f,
+            cuit_final: cuitFinal
+        };
+    });
+
+    cachedFacturas = facturasEnriquecidas;
+    pintarTablaFacturacion(facturasEnriquecidas);
 }
 
 function filtrarFacturas() {
@@ -175,7 +164,7 @@ function filtrarFacturas() {
     const filtradas = cachedFacturas.filter(f => {
         const nro = (f.nro_comprobante || f.id).toLowerCase();
         const cliente = (f.cliente_nombre || "").toLowerCase();
-        const cuit = (f.cliente_cuit || "").toLowerCase();
+        const cuit = (f.cuit_final || "").toLowerCase();
         const vendedor = (f.usuario || "").toLowerCase();
 
         return nro.includes(term) ||
@@ -191,31 +180,48 @@ function pintarTablaFacturacion(data) {
     const kpiVentas = document.getElementById("total-ventas-dia");
     if (!tbody) return;
 
-    let totalDia = 0;
+    let totalHoy = 0;
+    const hoy = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
+
     tbody.innerHTML = data
         .map((f, index) => {
-            totalDia += parseFloat(f.total_final);
+            const monto = parseFloat(f.total_final) || 0;
+
+            // Convertimos la fecha de Supabase (UTC) a fecha local (YYYY-MM-DD)
+            const fechaLocal = f.created_at ? new Date(f.created_at).toLocaleDateString('en-CA') : '';
+
+            // Solo sumamos al "Total Hoy" si coincide con la fecha local actual
+            if (fechaLocal === hoy) {
+                totalHoy += monto;
+            }
+
             const nroAMostrar = f.nro_comprobante ? f.nro_comprobante : f.id.substring(0, 8);
-            const delay = Math.min(index * 50, 400); // Máximo 400ms de retraso
+            const delay = Math.min(index * 50, 400);
 
             return `
         <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50 animate-fade-up transform-gpu" style="animation-delay: ${delay}ms">
             <td class="p-4 text-slate-400">
                 <span class="text-slate-700 font-black">#${nroAMostrar}</span><br>
+                <span class="text-[10px] text-indigo-600 font-black uppercase italic leading-none">
+                    CUIT: ${f.cuit_final}
+                </span><br>
                 <span class="text-[9px] font-bold uppercase">${new Date(f.created_at).toLocaleDateString()}</span>
             </td>
             <td class="p-4 text-slate-700 uppercase font-black italic">
-    ${f.cliente_nombre}
-    ${f.cliente_cuit ? `<br><span class="text-[8px] text-slate-400 font-bold">CUIT: ${f.cliente_cuit}</span>` : ""}
-    ${f.cae ? `<br><span class="text-[8px] text-emerald-500 font-normal">CAE: ${f.cae}</span>` : ""}
-</td>
+                ${f.cliente_nombre}
+                ${f.cae ? `<br><span class="text-[8px] text-emerald-500 font-normal">CAE: ${f.cae}</span>` : ""}
+            </td>
             <td class="p-4">
                 <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-black shadow-sm">${f.usuario?.charAt(0) || "M"}</div>
-                    <span class="text-xs text-slate-600 font-bold uppercase italic">${f.usuario || ""}</span>
+                    <div class="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-black shadow-sm">
+                        ${(f.usuario || "S").charAt(0).toUpperCase()}
+                    </div>
+                    <span class="text-xs text-slate-600 font-bold uppercase italic">
+                        ${(f.usuario || "S").replace('_', ' ').replace('user', '').trim() || "SISTEMA"}
+                    </span>
                 </div>
             </td>
-            <td class="p-4 text-emerald-600 font-black italic text-sm">$${parseFloat(f.total_final).toLocaleString("es-AR")}</td>
+            <td class="p-4 text-emerald-600 font-black italic text-sm">$${monto.toLocaleString("es-AR")}</td>
             <td class="p-4 text-center">
                 <button onclick="imprimirFactura('${f.id}')" class="text-slate-400 hover:text-indigo-600">
                     <i class="fas fa-print"></i>
@@ -225,7 +231,7 @@ function pintarTablaFacturacion(data) {
         })
         .join("");
 
-    if (kpiVentas) kpiVentas.innerText = `$${totalDia.toLocaleString("es-AR")}`;
+    if (kpiVentas) kpiVentas.innerText = `$${totalHoy.toLocaleString("es-AR")}`;
 }
 
 // ==========================================
