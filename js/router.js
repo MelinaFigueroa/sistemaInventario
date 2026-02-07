@@ -143,6 +143,7 @@ function ejecutarInicializadores(pageUrl) {
     if (pageUrl.includes("movimientos")) renderMovimientos();
     if (pageUrl.includes("inventario")) renderInventario();
     if (pageUrl.includes("recepcion")) prepararRecepcion();
+    if (pageUrl.includes("cobranzas")) prepararCobranzas();
 }
 
 /**

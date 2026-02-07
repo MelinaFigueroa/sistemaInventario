@@ -66,6 +66,11 @@ async function cargarPerfilUsuario(userId, email) {
         // Guardar en caché global para acceso rápido
         window.userProfile = perfil;
 
+        // Actualizar el nombre global para los registros (inserts)
+        if (perfil.nombre) {
+            USUARIO_ACTUAL = perfil.nombre;
+        }
+
         // Actualizar UI en Vista (Header de Inicio si existe)
         actualizarSaludoHeader();
 
@@ -111,7 +116,10 @@ function aplicarPermisosSidebar(rol) {
 
 // Función centralizada de seguridad
 function tienePermiso(idOMenu) {
-    const rol = window.currentUserRole;
+    let rol = window.currentUserRole || 'invitado';
+
+    // Normalizar: quitar acentos y pasar a minúsculas
+    rol = rol.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
     const permisos = {
         'admin': ['*'],
@@ -373,13 +381,9 @@ function actualizarSaludoHeader() {
     if (elDate) {
         // En mobile (ventana pequeña) mostramos fecha corta y hora
         const ahora = new Date();
-        const esMobile = window.innerWidth < 768;
-        const opciones = esMobile
-            ? { day: 'numeric', month: 'short' }
-            : { weekday: 'long', day: 'numeric', month: 'long' };
+        const opciones = { day: 'numeric', month: 'long', year: 'numeric' };
 
         let fechaStr = ahora.toLocaleDateString('es-AR', opciones).toUpperCase();
-        if (esMobile) fechaStr = fechaStr.replace('.', ''); // Limpiar puntos de abr.
 
         const horaStr = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
         elDate.innerText = `${fechaStr} - ${horaStr}`;
