@@ -89,6 +89,7 @@ async function aprobarPago(pagoId) {
 
         // Refrescar vista si existe la función
         if (typeof renderPagosPendientes === 'function') renderPagosPendientes();
+        if (typeof actualizarDashboard === 'function') await actualizarDashboard();
 
     } catch (err) {
         console.error("Error en aprobarPago:", err);
@@ -311,5 +312,120 @@ async function abrirCuentaCorriente(clienteId) {
         confirmButtonText: 'Cerrar',
         confirmButtonColor: '#4f46e5'
     });
+}
+
+/**
+ * PREPARAR FORMULARIO DE COBRANZAS
+ * Carga la lista de clientes en el select
+ */
+/**
+ * PREPARAR FORMULARIO DE COBRANZAS
+ * Carga la lista de clientes en el select
+ */
+async function prepararCobranzas() {
+    console.log("💳 Preparando módulo de cobranzas...");
+    try {
+        const select = document.getElementById('cob-cliente-select');
+        if (!select) {
+            console.warn("⚠️ Elemento 'cob-cliente-select' no encontrado en el DOM.");
+            return;
+        }
+
+        // Mostrar estado de carga
+        select.innerHTML = '<option value="">Cargando clientes de Supabase...</option>';
+
+        const { data: clientes, error } = await _supabase
+            .from('clientes')
+            .select('id, nombre')
+            .order('nombre');
+
+        if (error) {
+            console.error("❌ Error Supabase al cargar clientes:", error);
+            throw error;
+        }
+
+        if (!clientes || clientes.length === 0) {
+            select.innerHTML = '<option value="">Sin clientes registrados</option>';
+            return;
+        }
+
+        console.log(`✅ ${clientes.length} clientes cargados para cobranza.`);
+        select.innerHTML = '<option value="">Seleccionar Cliente...</option>' +
+            clientes.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+
+    } catch (e) {
+        console.error("❌ Error crítico preparando cobranzas:", e);
+        const select = document.getElementById('cob-cliente-select');
+        if (select) select.innerHTML = '<option value="">Error al cargar clientes</option>';
+        Notificar.error("ERROR DE CONEXIÓN", "No se pudieron obtener los clientes. Verifica tu conexión.");
+    }
+}
+
+/**
+ * UTILS PARA UI DE COBRANZAS (Previews)
+ */
+function mostrarPreviewCobranza(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const preview = document.getElementById('img-preview');
+            const container = document.getElementById('preview-container');
+            if (preview) preview.src = e.target.result;
+            if (container) container.classList.remove('hidden');
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function resetPreviewCobranza() {
+    const fileInput = document.getElementById('cob-foto');
+    const container = document.getElementById('preview-container');
+    if (fileInput) fileInput.value = '';
+    if (container) container.classList.add('hidden');
+}
+
+/**
+ * GESTIÓN DE ENVÍO DE PAGO (Desde el formulario de cobranzas.html)
+ */
+async function prepararEnvioPago(e) {
+    if (e) e.preventDefault();
+    console.log("📤 Iniciando proceso de envío de pago...");
+
+    try {
+        const clienteId = document.getElementById('cob-cliente-select')?.value;
+        const monto = parseFloat(document.getElementById('cob-monto')?.value);
+        const metodo = document.getElementById('cob-metodo')?.value;
+        const notas = document.getElementById('cob-observaciones')?.value;
+        const fileInput = document.getElementById('cob-foto');
+        const archivo = fileInput?.files[0];
+
+        if (!clienteId) {
+            Swal.fire('¡FALTA CLIENTE!', 'Seleccioná a qué cliente le estás cargando el pago.', 'warning');
+            return;
+        }
+
+        if (isNaN(monto) || monto <= 0) {
+            Swal.fire('¡MONTO INVÁLIDO!', 'Ingresá un importe válido mayor a 0.', 'warning');
+            return;
+        }
+
+        if (!archivo) {
+            Swal.fire('¡FALTA COMPROBANTE!', 'Tenés que subir la foto de la transferencia o recibo.', 'error');
+            return;
+        }
+
+        const pagoData = {
+            cliente_id: clienteId,
+            monto: monto,
+            metodo_pago: metodo,
+            notas: notas
+        };
+
+        await registrarPago(pagoData, archivo);
+
+    } catch (err) {
+        console.error("❌ Error en prepararEnvioPago:", err);
+        Notificar.error("ERROR", "No se pudo procesar el formulario.");
+    }
 }
 

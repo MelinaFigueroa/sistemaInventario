@@ -35,6 +35,7 @@ async function guardarClienteSupabase() {
         Notificar.exito("CLIENTE REGISTRADO", `<b>${nombre}</b> ha sido añadido a la base de datos.`);
         cerrarModalCliente();
         if (typeof renderClientes === 'function') renderClientes();
+        if (typeof actualizarDashboard === 'function') await actualizarDashboard();
 
     } catch (e) {
         console.error("Error guardando cliente:", e);
